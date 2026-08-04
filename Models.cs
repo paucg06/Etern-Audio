@@ -19,6 +19,7 @@ namespace EternAudio
         [DataMember] public long FileSizeBytes { get; set; }
         [DataMember] public double DurationSeconds { get; set; }
         [DataMember] public bool IsShortSfx { get; set; } // true if < 30s, false if >= 30s
+        [DataMember] public bool NeedsReview { get; set; } // true if organization was uncertain
         [DataMember] public string LibraryId { get; set; }
         [DataMember] public bool IsFavorite { get; set; }
         [DataMember] public int PlayCount { get; set; }
@@ -30,6 +31,7 @@ namespace EternAudio
             Tags = new string[0];
             Category = "General";
             SubCategory = "General";
+            NeedsReview = false;
             DateAddedTicks = DateTime.Now.Ticks;
         }
     }

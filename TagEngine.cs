@@ -21,45 +21,45 @@ namespace EternAudio
         private static readonly Dictionary<string, string[]> SynonymMap =
             new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            { "explosion",    new[] {"explosion","explosión","boom","blast","bang","detonate","detonation","kaboom","burst","bomba","estallido","bum","blowup","detonacion"} },
-            { "bomba",        new[] {"bomba","bomb","explosion","blast","bang","estallido","explosión","granada"} },
-            { "impact",       new[] {"impact","hit","strike","crash","smash","bang","blow","golpe","impacto","choque","colision"} },
-            { "impacto",      new[] {"impacto","impact","hit","strike","golpe","choque","crash","smash"} },
-            { "hit",          new[] {"hit","impact","punch","strike","blow","slap","golpe","golpear","impacto"} },
-            { "golpe",        new[] {"golpe","hit","impact","punch","strike","blow","thud","crash","impacto","bash"} },
-            { "bone",         new[] {"bone","hueso","break","crack","fracture","romper","crujido"} },
-            { "hueso",        new[] {"hueso","bone","break","crack","fracture","romper","crujido"} },
-            { "romperse",     new[] {"romperse","break","bone","hueso","crack","fracture","romper"} },
-            { "nature",       new[] {"nature","natural","outdoor","environment","forest","wind","rain","naturaleza","ambiente","bosque","viento","lluvia"} },
-            { "viento",       new[] {"viento","wind","breeze","gust","brisa","rafaga","tormenta","storm"} },
+            { "explosion",    new[] {"explosion","explosión","boom","blast","bang","detonate","detonation","kaboom","burst","bomba","estallido","bum","blowup","detonacion","fuego","fire"} },
+            { "bomba",        new[] {"bomba","bomb","explosion","blast","bang","estallido","explosión","granada","nuke","dynamite","dinamita"} },
+            { "impact",       new[] {"impact","hit","strike","crash","smash","bang","blow","golpe","impacto","choque","colision","thud","caida","fall"} },
+            { "impacto",      new[] {"impacto","impact","hit","strike","golpe","choque","crash","smash","caida","cuerpo","suelo"} },
+            { "hit",          new[] {"hit","impact","punch","strike","blow","slap","golpe","golpear","impacto","bash","puñetazo"} },
+            { "golpe",        new[] {"golpe","hit","impact","punch","strike","blow","thud","crash","impacto","bash","puñetazo","bop"} },
+            { "bone",         new[] {"bone","hueso","break","crack","fracture","romper","crujido","romperse","cuerpo","body"} },
+            { "hueso",        new[] {"hueso","bone","break","crack","fracture","romper","crujido","romperse","cuerpo","body"} },
+            { "romperse",     new[] {"romperse","break","bone","hueso","crack","fracture","romper","crujido","ruptura"} },
+            { "nature",       new[] {"nature","natural","outdoor","environment","forest","wind","rain","naturaleza","ambiente","bosque","viento","lluvia","selva","arbol"} },
+            { "viento",       new[] {"viento","wind","breeze","gust","brisa","rafaga","tormenta","storm","aire"} },
             { "rain",         new[] {"rain","drizzle","shower","storm","water","lluvia","chubasco","aguacero","agua","tormenta"} },
-            { "lluvia",       new[] {"lluvia","rain","drizzle","shower","agua","chubasco","tormenta","storm"} },
-            { "footstep",     new[] {"footstep","step","walk","run","feet","foot","paso","caminar","correr","pie","steps"} },
-            { "paso",         new[] {"paso","footstep","step","walk","feet","caminar","pie","steps"} },
-            { "gun",          new[] {"gun","shoot","fire","weapon","pistol","rifle","shot","arma","disparo","pistola","fusil","bala"} },
-            { "arma",         new[] {"arma","gun","weapon","shoot","fire","pistola","fusil","disparo","bala"} },
-            { "disparo",      new[] {"disparo","shoot","shot","gun","fire","arma","bala","pistola","fusil","tiro"} },
-            { "sword",        new[] {"sword","blade","slash","slice","clang","espada","hoja","tajo","corte","metal"} },
-            { "click",        new[] {"click","button","select","press","mouse","clic","boton","seleccionar","pulsar"} },
-            { "clic",         new[] {"clic","click","button","select","press","boton","seleccionar","pulsar"} },
-            { "boton",        new[] {"boton","button","click","select","clic","respuesta","ui"} },
-            { "error",        new[] {"error","fail","wrong","buzz","incorrect","fallo","equivocacion","incorrecto","respuesta"} },
-            { "incorrecto",   new[] {"incorrecto","error","fail","wrong","fallo","respuesta","boton"} },
-            { "whoosh",       new[] {"whoosh","swipe","fast","speed","swoosh","transition","rapido","veloz","transicion","silbido"} },
-            { "voice",        new[] {"voice","human","speak","talk","vocal","voz","humano","hablar","habla"} },
-            { "voz",          new[] {"voz","voice","human","speak","talk","humano","hablar","habla"} },
-            { "grito",        new[] {"grito","scream","yell","shout","cry","gritar","chillar","terror","horror"} },
-            { "meme",         new[] {"meme","comedy","funny","funny_sound","comedia","humor","gracioso","frase"} },
-            { "frase",        new[] {"frase","voice","speech","voz","habla","humano","meme"} },
-            { "comedy",       new[] {"comedy","funny","cartoon","silly","humorous","comedia","gracioso","dibujos","tonto","humor","meme"} },
-            { "kirby",        new[] {"kirby","cartoon","funny","game","nintendo","comedia","meme"} },
-            { "goku",         new[] {"goku","dragonball","anime","drama","meme","comedy"} },
-            { "doraemon",     new[] {"doraemon","anime","cartoon","funny","dibujos","comedia"} },
-            { "cartoon",      new[] {"cartoon","funny","comedy","animated","silly","dibujos","gracioso","comedia"} },
-            { "yunke",        new[] {"yunke","anvil","yunque","metal","hit","golpe","acero"} },
-            { "motosierra",   new[] {"motosierra","chainsaw","wood","madera","cortar"} },
-            { "music",        new[] {"music","musical","melody","tune","song","musica","melodia","cancion","ritmo"} },
-            { "musica",       new[] {"musica","music","musical","melody","melodia","cancion","ritmo"} },
+            { "lluvia",       new[] {"lluvia","rain","drizzle","shower","agua","chubasco","tormenta","storm","water"} },
+            { "footstep",     new[] {"footstep","step","walk","run","feet","foot","paso","caminar","correr","pie","steps","walking"} },
+            { "paso",         new[] {"paso","footstep","step","walk","feet","caminar","pie","steps","andar","correr"} },
+            { "gun",          new[] {"gun","shoot","fire","weapon","pistol","rifle","shot","arma","disparo","pistola","fusil","bala","tiro"} },
+            { "arma",         new[] {"arma","gun","weapon","shoot","fire","pistola","fusil","disparo","bala","tiro","espada"} },
+            { "disparo",      new[] {"disparo","shoot","shot","gun","fire","arma","bala","pistola","fusil","tiro","shotgun"} },
+            { "sword",        new[] {"sword","blade","slash","slice","clang","espada","hoja","tajo","corte","metal","arma"} },
+            { "click",        new[] {"click","button","select","press","mouse","clic","boton","seleccionar","pulsar","interfaz","ui"} },
+            { "clic",         new[] {"clic","click","button","select","press","boton","seleccionar","pulsar","ui"} },
+            { "boton",        new[] {"boton","button","click","select","clic","respuesta","ui","interfaz","presionar"} },
+            { "error",        new[] {"error","fail","wrong","buzz","incorrect","fallo","equivocacion","incorrecto","respuesta","alerta","warning"} },
+            { "incorrecto",   new[] {"incorrecto","error","fail","wrong","fallo","respuesta","boton","fail_sound","malo"} },
+            { "whoosh",       new[] {"whoosh","swipe","fast","speed","swoosh","transition","rapido","veloz","transicion","silbido","aire","pasa"} },
+            { "voice",        new[] {"voice","human","speak","talk","vocal","voz","humano","hablar","habla","grito","frase"} },
+            { "voz",          new[] {"voz","voice","human","speak","talk","humano","hablar","habla","grito","frase","persona"} },
+            { "grito",        new[] {"grito","scream","yell","shout","cry","gritar","chillar","terror","horror","miedo","ayuda"} },
+            { "meme",         new[] {"meme","comedy","funny","funny_sound","comedia","humor","gracioso","frase","redes","viral","risas"} },
+            { "frase",        new[] {"frase","voice","speech","voz","habla","humano","meme","grito","dialogo"} },
+            { "comedy",       new[] {"comedy","funny","cartoon","silly","humorous","comedia","gracioso","dibujos","tonto","humor","meme","animado"} },
+            { "kirby",        new[] {"kirby","cartoon","funny","game","nintendo","comedia","meme","dibujos","nintendo_switch","rosa","super_smash"} },
+            { "goku",         new[] {"goku","dragonball","anime","drama","meme","comedy","saiyan","goku_meme","kamehameha"} },
+            { "doraemon",     new[] {"doraemon","anime","cartoon","funny","dibujos","comedia","gato_cosmico","nobita"} },
+            { "cartoon",      new[] {"cartoon","funny","comedy","animated","silly","dibujos","gracioso","comedia","caida","animacion"} },
+            { "yunke",        new[] {"yunke","anvil","yunque","metal","hit","golpe","acero","hierro","yunque_metal"} },
+            { "motosierra",   new[] {"motosierra","chainsaw","wood","madera","cortar","herramienta","corta","ruido"} },
+            { "music",        new[] {"music","musical","melody","tune","song","musica","melodia","cancion","ritmo","loop","banda_sonora"} },
+            { "musica",       new[] {"musica","music","musical","melody","melodia","cancion","ritmo","loop","pista","ambiente"} },
         };
 
         private static readonly Dictionary<string, string> CategoryMap =
@@ -151,15 +151,24 @@ namespace EternAudio
                 }
             }
 
-            // Determine SubCategory from directory structure if available
+            // Include directory hierarchy tokens as tags
             string dirName = Path.GetFileName(Path.GetDirectoryName(filePath));
             string parentDirName = Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(filePath)));
-            string subCategory = string.IsNullOrEmpty(dirName) ? "General" : dirName;
+
+            if (!string.IsNullOrEmpty(dirName))
+            {
+                var dirToks = Regex.Split(dirName, @"[\s\-_\.]+");
+                foreach (var dt in dirToks)
+                    if (dt.Length >= 2) tagSet.Add(NormalizeText(dt));
+            }
 
             double duration = FileOrganizer.GetAudioDurationSeconds(filePath);
             bool isShort = duration < 30.0;
+            bool needsReview = false;
 
-            string category = isShort ? "EFX / Corto" : "Música / Largo";
+            string subCategory = string.IsNullOrEmpty(dirName) ? "General" : dirName;
+            string category = isShort ? "EFX / Cortos" : "Música / Largos";
+
             if (!string.IsNullOrEmpty(dirName) && dirName != "Efectos Sonido" && dirName != "Fbx" && dirName != "Musica")
             {
                 category = dirName;
@@ -170,11 +179,16 @@ namespace EternAudio
                 foreach (var kvp in categoryCounts)
                     if (kvp.Value > maxCount) { maxCount = kvp.Value; category = kvp.Key; }
             }
+            else
+            {
+                category = "⚠️ Por Clasificar";
+                needsReview = true;
+            }
 
             string displayName = Path.GetFileNameWithoutExtension(cleanFileName).Replace("_", " ").Trim();
 
+            // Rich tags without arbitrary small cap
             var tagList = new List<string>(tagSet);
-            if (tagList.Count > 25) tagList = tagList.GetRange(0, 25);
 
             long fileSize = 0;
             try { fileSize = new FileInfo(filePath).Length; } catch { }
@@ -189,7 +203,8 @@ namespace EternAudio
                 SubCategory = subCategory,
                 FileSizeBytes = fileSize,
                 DurationSeconds = duration,
-                IsShortSfx = isShort
+                IsShortSfx = isShort,
+                NeedsReview = needsReview
             };
         }
 
@@ -238,11 +253,12 @@ namespace EternAudio
             if (category.IndexOf("Golpe", StringComparison.OrdinalIgnoreCase) >= 0 || category.IndexOf("Impacto", StringComparison.OrdinalIgnoreCase) >= 0) return "#f97316";
             if (category.IndexOf("Terror", StringComparison.OrdinalIgnoreCase) >= 0 || category.IndexOf("Drama", StringComparison.OrdinalIgnoreCase) >= 0) return "#7c3aed";
             if (category.IndexOf("Transicion", StringComparison.OrdinalIgnoreCase) >= 0 || category.IndexOf("Whoosh", StringComparison.OrdinalIgnoreCase) >= 0) return "#58a6ff";
+            if (category.IndexOf("Por Clasificar", StringComparison.OrdinalIgnoreCase) >= 0 || category.IndexOf("⚠️", StringComparison.OrdinalIgnoreCase) >= 0) return "#f59e0b";
             return "#39d353";
         }
 
         public static readonly string[] AllCategories = {
-            "Todos los audios", "EFX / Cortos (<30s)", "Música / Largos (>=30s)",
+            "Todos los audios", "EFX / Cortos (<30s)", "Música / Largos (>=30s)", "⚠️ Por Clasificar",
             "Abucheos-Insultos", "Animal", "Campanas-Bongs-Alarmas", "Cartoon-Animados",
             "Censuras - Distorsiones - Explosiones", "Drama-Terror", "Efectos Frecuentes",
             "Frases", "Golpes-Puñetazos", "Internet-Ordenadores", "Objetos", "Transiciones", "Whoosh",

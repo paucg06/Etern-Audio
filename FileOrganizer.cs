@@ -8,7 +8,6 @@ namespace EternAudio
 {
     public static class FileOrganizer
     {
-        // ─── Direct Spanish Dictionary Mappings for Common File Names ─────────────────
         private static readonly Dictionary<string, string> KnownNameTranslations =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -39,7 +38,6 @@ namespace EternAudio
             { "IPHONE TIPEAR EFECTO DE SONIDO _ TECLADO _ PERSONA ESCRIBIENDO IPHONE SOUND EFFECT - SIN COPYRIGHT", "Teclado_Iphone_Escribiendo" }
         };
 
-        // Word translations (EN -> ES)
         private static readonly Dictionary<string, string> WordTranslations =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -55,37 +53,31 @@ namespace EternAudio
             { "car", "Coche" }, { "train", "Tren" }, { "explosion", "Explosion" }, { "boom", "Bum" }
         };
 
-        /// <summary>
-        /// Cleans a filename and formats it cleanly to Title_Case_With_Underscores in Spanish.
-        /// </summary>
         public static string FormatCleanSpanishFileName(string rawFileName)
         {
             string nameWithoutExt = Path.GetFileNameWithoutExtension(rawFileName);
 
-            // Check known exact mapping
             foreach (var kvp in KnownNameTranslations)
             {
                 if (nameWithoutExt.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)
                     return kvp.Value;
             }
 
-            // Clean YouTube hashes [WXOXRR4vmwo], filler words
             string cleaned = Regex.Replace(nameWithoutExt, @"\[[A-Za-z0-9_-]{8,}\]", "");
             cleaned = Regex.Replace(cleaned, @"(?i)(EFECTO DE SONIDO|SOUND EFFECT|SIN COPYRIGHT|NO COPYRIGHT|MP3|WAV)", "");
-            cleaned = Regex.Replace(cleaned, @"^\d+[\s\-_]*", ""); // remove leading track numbers
+            cleaned = Regex.Replace(cleaned, @"^\d+[\s\-_]*", "");
             cleaned = Regex.Replace(cleaned, @"[\-_]+", " ");
             cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
 
             if (string.IsNullOrEmpty(cleaned))
                 cleaned = nameWithoutExt;
 
-            // Tokenize and translate words to Spanish
             var words = cleaned.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var cleanWords = new List<string>();
 
             foreach (var w in words)
             {
-                if (Regex.IsMatch(w, @"^\d+$")) continue; // skip raw digits
+                if (Regex.IsMatch(w, @"^\d+$")) continue;
                 string normalized = TagEngine.NormalizeText(w);
 
                 if (WordTranslations.ContainsKey(normalized))
@@ -94,7 +86,6 @@ namespace EternAudio
                 }
                 else
                 {
-                    // Capitalize word
                     string cap = char.ToUpper(w[0]) + (w.Length > 1 ? w.Substring(1).ToLower() : "");
                     cleanWords.Add(cap);
                 }
@@ -106,9 +97,6 @@ namespace EternAudio
             return string.Join("_", cleanWords);
         }
 
-        /// <summary>
-        /// Estimates or reads audio file duration in seconds.
-        /// </summary>
         public static double GetAudioDurationSeconds(string filePath)
         {
             try
@@ -134,7 +122,6 @@ namespace EternAudio
             }
             catch { }
 
-            // Estimate from file size (average ~128kbps = 16000 bytes/sec for mp3)
             try
             {
                 long size = new FileInfo(filePath).Length;
@@ -146,11 +133,7 @@ namespace EternAudio
             }
         }
 
-        /// <summary>
-        /// Physical auto-organizer: scans a root library directory, renames unorganized files cleanly,
-        /// and moves loose files into proper Fbx or Musica subfolders on disk!
-        /// </summary>
-        public static int PerformAutoOrganization(string rootDirectoryPath)
+        public static int PerformAutoOrganization(string rootDirectoryPath, Action<int, int, string> onProgress = null)
         {
             if (!Directory.Exists(rootDirectoryPath)) return 0;
             int organizedCount = 0;
@@ -161,19 +144,27 @@ namespace EternAudio
             if (!Directory.Exists(fbxDir)) Directory.CreateDirectory(fbxDir);
             if (!Directory.Exists(musicDir)) Directory.CreateDirectory(musicDir);
 
-            // Default subcategories
             string memesDir = Path.Combine(fbxDir, "Cartoon-Animados");
             string generalSfxDir = Path.Combine(fbxDir, "Efectos Frecuentes");
+            string reviewDir = Path.Combine(fbxDir, "Por_Clasificar");
             string musicGeneralDir = Path.Combine(musicDir, "Productividad");
 
             if (!Directory.Exists(memesDir)) Directory.CreateDirectory(memesDir);
             if (!Directory.Exists(generalSfxDir)) Directory.CreateDirectory(generalSfxDir);
+            if (!Directory.Exists(reviewDir)) Directory.CreateDirectory(reviewDir);
             if (!Directory.Exists(musicGeneralDir)) Directory.CreateDirectory(musicGeneralDir);
 
-            // Find all loose files in the root of the library
-            foreach (var file in Directory.GetFiles(rootDirectoryPath))
+            var looseFiles = new List<string>();
+            foreach (var f in Directory.GetFiles(rootDirectoryPath))
+                if (TagEngine.IsAudioFile(f)) looseFiles.Add(f);
+
+            int totalLoose = looseFiles.Count;
+
+            for (int i = 0; i < totalLoose; i++)
             {
-                if (!TagEngine.IsAudioFile(file)) continue;
+                string file = looseFiles[i];
+                if (onProgress != null)
+                    onProgress(i + 1, totalLoose, Path.GetFileName(file));
 
                 try
                 {
@@ -189,7 +180,9 @@ namespace EternAudio
                     else
                     {
                         var autoTagged = TagEngine.AutoTag(file);
-                        if (autoTagged.Category == "Comedia" || autoTagged.Category == "Voz")
+                        if (autoTagged.NeedsReview)
+                            targetFolder = reviewDir;
+                        else if (autoTagged.Category == "Comedia" || autoTagged.Category == "Voz")
                             targetFolder = memesDir;
                         else
                             targetFolder = generalSfxDir;
@@ -197,7 +190,6 @@ namespace EternAudio
 
                     string targetFilePath = Path.Combine(targetFolder, cleanName);
 
-                    // Ensure target filename is unique
                     int counter = 1;
                     string nameNoExt = Path.GetFileNameWithoutExtension(cleanName);
                     while (File.Exists(targetFilePath))
@@ -215,9 +207,6 @@ namespace EternAudio
             return organizedCount;
         }
 
-        /// <summary>
-        /// Builds a directory tree structure for the sidebar tree view.
-        /// </summary>
         public static FolderNode BuildDirectoryTree(string rootPath)
         {
             if (!Directory.Exists(rootPath)) return null;
