@@ -13,7 +13,7 @@ using System.Windows.Threading;
 using System.ComponentModel;
 using System.Collections.Specialized;
 
-namespace SfxVault
+namespace EternAudio
 {
     public class WpfMainWindow : Window
     {
@@ -28,21 +28,22 @@ namespace SfxVault
             catch (Exception ex)
             {
                 File.WriteAllText("crash_log.txt", ex.ToString());
-                MessageBox.Show("Error al iniciar: " + ex.Message);
+                MessageBox.Show("Error al iniciar Etern Audio: " + ex.Message);
             }
         }
 
-        // ─── Colors ─────────────────────────────────────────────────────────────
-        static readonly Color BG        = (Color)ColorConverter.ConvertFromString("#0a0a12");
-        static readonly Color SURFACE   = (Color)ColorConverter.ConvertFromString("#12121e");
-        static readonly Color SURFACE2  = (Color)ColorConverter.ConvertFromString("#1c1c2e");
-        static readonly Color SURFACE3  = (Color)ColorConverter.ConvertFromString("#24243a");
-        static readonly Color BORDER_C  = (Color)ColorConverter.ConvertFromString("#2d2d45");
-        static readonly Color ACCENT    = (Color)ColorConverter.ConvertFromString("#00d9a0");
-        static readonly Color TEXT_C    = (Color)ColorConverter.ConvertFromString("#e2e8f0");
-        static readonly Color TEXTMUTED = (Color)ColorConverter.ConvertFromString("#8892a4");
-        static readonly Color TEXTDIM   = (Color)ColorConverter.ConvertFromString("#4a5568");
-        static readonly Color WARNING_C = (Color)ColorConverter.ConvertFromString("#f59e0b");
+        // ─── Colors (Identical to Etern-Notes / EternSynth) ───────────────────
+        static readonly Color BG        = Color.FromRgb(18, 18, 18);     // #121212
+        static readonly Color SIDEBAR   = Color.FromRgb(26, 26, 26);     // #1a1a1a
+        static readonly Color CARD      = Color.FromRgb(33, 33, 33);     // #212121
+        static readonly Color CARDHOVER = Color.FromRgb(42, 42, 42);     // #2a2a2a
+        static readonly Color BORDER_C  = Color.FromRgb(48, 48, 48);     // #303030
+        static readonly Color ACCENT    = Color.FromRgb(88, 166, 255);   // #58a6ff (Etern Blue)
+        static readonly Color ACCENTGREEN= Color.FromRgb(57, 211, 83);   // #39d353
+        static readonly Color TEXT_C    = Colors.White;
+        static readonly Color TEXTMUTED = Color.FromRgb(150, 150, 150); // #969696
+        static readonly Color TEXTDIM   = Color.FromRgb(100, 100, 100);
+        static readonly Color WARNING_C = Color.FromRgb(240, 136, 62);  // #f0883e
 
         static SolidColorBrush Br(Color c) { return new SolidColorBrush(c); }
         static SolidColorBrush BrH(string hex) { return (SolidColorBrush)(new BrushConverter().ConvertFrom(hex)); }
@@ -97,20 +98,55 @@ namespace SfxVault
             AllowsTransparency = true;
             Background = Brushes.Transparent;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            Title = "SFX Vault";
+            Title = "Etern Audio";
 
             db = Storage.Load();
             BuildUI();
             SetupPlayer();
             SetupMenuHideTimer();
             RefreshSidebar();
-            RebuildIndex();
-            RefreshFileList();
 
             KeyDown += Window_KeyDown;
 
+            // Auto-detect "Efectos Sonido" or "Efectos de sonido" on Desktop if no libraries exist
+            CheckAndAutoImportDesktopFolder();
+
+            RebuildIndex();
+            RefreshFileList();
+
             if (db.Libraries.Count > 0)
                 Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(delegate() { RescanAllLibraries(); }));
+        }
+
+        void CheckAndAutoImportDesktopFolder()
+        {
+            if (db.Libraries.Count == 0)
+            {
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string[] candidates = new string[]
+                {
+                    System.IO.Path.Combine(desktop, "Efectos Sonido"),
+                    System.IO.Path.Combine(desktop, "Efectos de sonido"),
+                    System.IO.Path.Combine(desktop, "Efectos_de_sonido")
+                };
+
+                foreach (string candidate in candidates)
+                {
+                    if (Directory.Exists(candidate))
+                    {
+                        var lib = new SfxLibrary
+                        {
+                            Name = System.IO.Path.GetFileName(candidate),
+                            RootPath = candidate
+                        };
+                        db.Libraries.Add(lib);
+                        Storage.Save(db);
+                        RefreshSidebar();
+                        ScanLibrary(lib);
+                        break;
+                    }
+                }
+            }
         }
 
         // ─── UI Building ────────────────────────────────────────────────────────
@@ -164,18 +200,18 @@ namespace SfxVault
 
         Grid CreateTitleBar()
         {
-            var g = new Grid { Background = Br(SURFACE) };
+            var g = new Grid { Background = Br(SIDEBAR) };
             g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
             g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             var btnH = MakeWinBtn("=", Colors.Transparent, delegate() { ToggleSidebar(); });
-            btnH.FontSize = 14; btnH.ToolTip = "Colapsar sidebar";
+            btnH.FontSize = 14; btnH.ToolTip = "Colapsar panel lateral";
             Grid.SetColumn(btnH, 0);
             g.Children.Add(btnH);
 
             var titlePanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
-            titlePanel.Children.Add(new TextBlock { Text = "SFX Vault", FontSize = 15, FontWeight = FontWeights.SemiBold, Foreground = Br(TEXT_C), VerticalAlignment = VerticalAlignment.Center });
+            titlePanel.Children.Add(new TextBlock { Text = "Etern Audio", FontSize = 15, FontWeight = FontWeights.Bold, Foreground = Br(TEXT_C), VerticalAlignment = VerticalAlignment.Center });
             titlePanel.Children.Add(new TextBlock { Text = " \u25cf", FontSize = 10, Foreground = Br(ACCENT), VerticalAlignment = VerticalAlignment.Center });
             Grid.SetColumn(titlePanel, 1);
             g.Children.Add(titlePanel);
@@ -200,18 +236,18 @@ namespace SfxVault
         {
             var border = new Border
             {
-                Background = Br(Color.FromArgb(245, 14, 14, 22)),
+                Background = Br(Color.FromRgb(22, 22, 22)),
                 BorderBrush = Br(BORDER_C),
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 Height = 0
             };
             var panel = new StackPanel { Orientation = Orientation.Horizontal };
 
-            AddMenu(panel, "Archivo", new string[] { "Añadir librería...", "Escanear librerías", "---", "Exportar lista a CSV", "---", "Salir" });
+            AddMenu(panel, "Archivo", new string[] { "Importar carpeta de audios...", "Re-escanear librerías", "---", "Exportar lista a CSV", "---", "Salir" });
             AddMenu(panel, "Editar",  new string[] { "Copiar ruta del archivo", "Copiar archivo al portapapeles", "---", "Abrir en explorador", "---", "Marcar favorito", "Desmarcar favorito" });
-            AddMenu(panel, "Ver",     new string[] { "Todos los archivos", "Solo favoritos", "---", "Mostrar sidebar", "Ocultar sidebar" });
+            AddMenu(panel, "Ver",     new string[] { "Todos los archivos", "Solo favoritos", "---", "Mostrar panel lateral", "Ocultar panel lateral" });
             AddMenu(panel, "Herramientas", new string[] { "Re-etiquetar todo", "Eliminar entradas huerfanas", "---", "Abrir carpeta de datos" });
-            AddMenu(panel, "Ayuda",   new string[] { "Atajos de teclado", "---", "Acerca de SFX Vault v1.0" });
+            AddMenu(panel, "Ayuda",   new string[] { "Atajos de teclado", "---", "Acerca de Etern Audio v1.0" });
 
             border.Child = panel;
             border.MouseEnter += delegate(object s, MouseEventArgs e) { menuHideTimer.Stop(); ShowMenuBar(); };
@@ -224,12 +260,12 @@ namespace SfxVault
             var btn = new Button { Content = title, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = Br(TEXT_C), FontSize = 12, Padding = new Thickness(12, 4, 12, 4), Cursor = Cursors.Hand };
             btn.MouseEnter += delegate(object s, MouseEventArgs e) { ((Button)s).Foreground = Br(ACCENT); };
             btn.MouseLeave += delegate(object s, MouseEventArgs e) { ((Button)s).Foreground = Br(TEXT_C); };
-            var cm = new ContextMenu { Background = Br(SURFACE2), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(1) };
+            var cm = new ContextMenu { Background = Br(CARD), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(1) };
             foreach (var itm in items)
             {
                 if (itm == "---") { cm.Items.Add(new Separator()); continue; }
                 var mi = new MenuItem { Header = itm, Background = Brushes.Transparent, Foreground = Br(TEXT_C), FontSize = 12 };
-                mi.MouseEnter += delegate(object s, MouseEventArgs e) { ((MenuItem)s).Background = Br(SURFACE3); };
+                mi.MouseEnter += delegate(object s, MouseEventArgs e) { ((MenuItem)s).Background = Br(CARDHOVER); };
                 mi.MouseLeave += delegate(object s, MouseEventArgs e) { ((MenuItem)s).Background = Brushes.Transparent; };
                 string captured = itm;
                 mi.Click += delegate(object s, RoutedEventArgs e) { HandleMenuAction(captured); };
@@ -241,7 +277,7 @@ namespace SfxVault
 
         Border CreateSidebar()
         {
-            var border = new Border { Background = Br(SURFACE) };
+            var border = new Border { Background = Br(SIDEBAR) };
             var grid = new Grid();
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -250,11 +286,11 @@ namespace SfxVault
             var libHeader = new Grid { Margin = new Thickness(0, 14, 0, 6) };
             libHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             libHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            var txtLibTitle = new TextBlock { Text = "LIBRERIAS", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Br(TEXTMUTED), Margin = new Thickness(14, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            var txtLibTitle = new TextBlock { Text = "CARPETAS", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Br(TEXTMUTED), Margin = new Thickness(14, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(txtLibTitle, 0);
             libHeader.Children.Add(txtLibTitle);
 
-            var btnAdd = new Button { Content = "+", Width = 24, Height = 24, FontSize = 16, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = Br(ACCENT), Cursor = Cursors.Hand, Margin = new Thickness(0, 0, 8, 0), ToolTip = "Añadir librería" };
+            var btnAdd = new Button { Content = "+ Importar", FontSize = 11, FontWeight = FontWeights.SemiBold, Background = new SolidColorBrush(Color.FromArgb(40, 88, 166, 255)), BorderThickness = new Thickness(1), BorderBrush = Br(ACCENT), Foreground = Br(ACCENT), Cursor = Cursors.Hand, Margin = new Thickness(0, 0, 8, 0), Padding = new Thickness(6, 2, 6, 2), ToolTip = "Importar carpeta de efectos de sonido" };
             btnAdd.Click += delegate(object s, RoutedEventArgs e) { AddLibrary(); };
             Grid.SetColumn(btnAdd, 1);
             libHeader.Children.Add(btnAdd);
@@ -273,7 +309,7 @@ namespace SfxVault
             Grid.SetRow(scroll, 1);
             grid.Children.Add(scroll);
 
-            var footer = new Border { Background = Br(SURFACE2), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 1, 0, 0), Padding = new Thickness(14, 8, 14, 8) };
+            var footer = new Border { Background = Br(CARD), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 1, 0, 0), Padding = new Thickness(14, 8, 14, 8) };
             lblScanStatus = new TextBlock { Text = "Listo", FontSize = 10, Foreground = Br(TEXTMUTED) };
             footer.Child = lblScanStatus;
             Grid.SetRow(footer, 2);
@@ -295,7 +331,7 @@ namespace SfxVault
             var searchBar = CreateSearchBar();
             Grid.SetRow(searchBar, 0); grid.Children.Add(searchBar);
 
-            var statsRow = new Border { Background = Br(SURFACE), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 1, 0, 1), Padding = new Thickness(16, 6, 16, 6) };
+            var statsRow = new Border { Background = Br(SIDEBAR), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 1, 0, 1), Padding = new Thickness(16, 6, 16, 6) };
             var sg = new Grid();
             sg.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             sg.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -329,9 +365,9 @@ namespace SfxVault
             itemStyle.Setters.Add(new Setter(ListViewItem.MarginProperty, new Thickness(0, 1, 0, 0)));
             itemStyle.Setters.Add(new Setter(ListViewItem.PaddingProperty, new Thickness(0)));
             var hoverT = new Trigger { Property = ListViewItem.IsMouseOverProperty, Value = true };
-            hoverT.Setters.Add(new Setter(ListViewItem.BackgroundProperty, Br(SURFACE2)));
+            hoverT.Setters.Add(new Setter(ListViewItem.BackgroundProperty, Br(CARDHOVER)));
             var selT = new Trigger { Property = ListViewItem.IsSelectedProperty, Value = true };
-            selT.Setters.Add(new Setter(ListViewItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(30, 0, 217, 160))));
+            selT.Setters.Add(new Setter(ListViewItem.BackgroundProperty, new SolidColorBrush(Color.FromArgb(40, 88, 166, 255))));
             itemStyle.Triggers.Add(hoverT); itemStyle.Triggers.Add(selT);
             lstFiles.ItemContainerStyle = itemStyle;
 
@@ -349,7 +385,7 @@ namespace SfxVault
 
         Border CreateSearchBar()
         {
-            var border = new Border { Background = Br(SURFACE), Padding = new Thickness(12, 10, 12, 10), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 0, 0, 1) };
+            var border = new Border { Background = Br(SIDEBAR), Padding = new Thickness(12, 10, 12, 10), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 0, 0, 1) };
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -360,10 +396,10 @@ namespace SfxVault
 
             txtSearch = new TextBox { FontSize = 14, Foreground = Br(TEXT_C), Background = Brushes.Transparent, BorderThickness = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, CaretBrush = Br(ACCENT) };
             txtSearch.TextChanged += delegate(object s, TextChangedEventArgs e) { SearchDebounce(); };
-            txtSearch.GotFocus  += delegate(object s, RoutedEventArgs e) { border.BorderBrush = BrH("#1a00d9a0"); };
+            txtSearch.GotFocus  += delegate(object s, RoutedEventArgs e) { border.BorderBrush = Br(ACCENT); };
             txtSearch.LostFocus += delegate(object s, RoutedEventArgs e) { border.BorderBrush = Br(BORDER_C); };
 
-            var wm = new TextBlock { Text = "Buscar sonidos... (explosion, lluvia, impacto...)", Foreground = Br(TEXTDIM), FontSize = 14, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
+            var wm = new TextBlock { Text = "Buscar sonidos... (explosion, lluvia, impacto, meme, risa...)", Foreground = Br(TEXTDIM), FontSize = 14, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
             txtSearch.TextChanged += delegate(object s, TextChangedEventArgs e) { wm.Visibility = string.IsNullOrEmpty(txtSearch.Text) ? Visibility.Visible : Visibility.Collapsed; };
             var ig = new Grid(); ig.Children.Add(wm); ig.Children.Add(txtSearch);
             Grid.SetColumn(ig, 1); grid.Children.Add(ig);
@@ -381,7 +417,7 @@ namespace SfxVault
 
         Border CreatePlayerPanel()
         {
-            var border = new Border { Background = Br(SURFACE), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 1, 0, 0) };
+            var border = new Border { Background = Br(SIDEBAR), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 1, 0, 0) };
             var grid = new Grid { Margin = new Thickness(14, 8, 14, 8) };
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -488,8 +524,8 @@ namespace SfxVault
                 catPanel.Children.Add(new Ellipse { Width = 7, Height = 7, Fill = BrH(catColor), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(14, 0, 8, 0) });
                 var lbl = new TextBlock { Text = cat, FontSize = 12, Foreground = activeCategory == cat ? Br(TEXT_C) : Br(TEXTMUTED), VerticalAlignment = VerticalAlignment.Center };
                 catPanel.Children.Add(lbl);
-                var catBtn = new Button { Content = catPanel, Background = activeCategory == cat ? Br(SURFACE3) : Brushes.Transparent, BorderThickness = new Thickness(0), Cursor = Cursors.Hand, Padding = new Thickness(0, 5, 14, 5), HorizontalContentAlignment = HorizontalAlignment.Left };
-                catBtn.MouseEnter += delegate(object s, MouseEventArgs e) { if (activeCategory != captured) { ((Button)s).Background = Br(SURFACE2); lbl.Foreground = Br(TEXT_C); } };
+                var catBtn = new Button { Content = catPanel, Background = activeCategory == cat ? Br(CARD) : Brushes.Transparent, BorderThickness = new Thickness(0), Cursor = Cursors.Hand, Padding = new Thickness(0, 5, 14, 5), HorizontalContentAlignment = HorizontalAlignment.Left };
+                catBtn.MouseEnter += delegate(object s, MouseEventArgs e) { if (activeCategory != captured) { ((Button)s).Background = Br(CARDHOVER); lbl.Foreground = Br(TEXT_C); } };
                 catBtn.MouseLeave += delegate(object s, MouseEventArgs e) { if (activeCategory != captured) { ((Button)s).Background = Brushes.Transparent; lbl.Foreground = Br(TEXTMUTED); } };
                 catBtn.Click += delegate(object s, RoutedEventArgs e) { activeCategory = activeCategory == captured ? null : captured; RefreshFileList(); RefreshSidebar(); };
                 sidebarCategoryPanel.Children.Add(catBtn);
@@ -498,8 +534,8 @@ namespace SfxVault
 
         FrameworkElement MakeSidebarItem(string text, bool isActive, Action onClick)
         {
-            var btn = new Button { Content = text, Background = isActive ? new SolidColorBrush(Color.FromArgb(20, 0, 217, 160)) : Brushes.Transparent, BorderThickness = isActive ? new Thickness(2, 0, 0, 0) : new Thickness(0), BorderBrush = Br(ACCENT), Foreground = isActive ? Br(ACCENT) : Br(TEXTMUTED), FontSize = 12, Cursor = Cursors.Hand, Padding = new Thickness(14, 7, 14, 7), HorizontalContentAlignment = HorizontalAlignment.Left };
-            btn.MouseEnter += delegate(object s, MouseEventArgs e) { if (!isActive) ((Button)s).Background = Br(SURFACE2); };
+            var btn = new Button { Content = text, Background = isActive ? new SolidColorBrush(Color.FromArgb(40, 88, 166, 255)) : Brushes.Transparent, BorderThickness = isActive ? new Thickness(2, 0, 0, 0) : new Thickness(0), BorderBrush = Br(ACCENT), Foreground = isActive ? Br(ACCENT) : Br(TEXTMUTED), FontSize = 12, Cursor = Cursors.Hand, Padding = new Thickness(14, 7, 14, 7), HorizontalContentAlignment = HorizontalAlignment.Left };
+            btn.MouseEnter += delegate(object s, MouseEventArgs e) { if (!isActive) ((Button)s).Background = Br(CARDHOVER); };
             btn.MouseLeave += delegate(object s, MouseEventArgs e) { if (!isActive) ((Button)s).Background = Brushes.Transparent; };
             btn.Click += delegate(object s, RoutedEventArgs e) { onClick(); };
             return btn;
@@ -522,7 +558,7 @@ namespace SfxVault
         {
             var grid = new Grid { Margin = new Thickness(10, 6, 10, 6) };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(65) });
@@ -545,8 +581,8 @@ namespace SfxVault
             int shown = 0;
             foreach (var tag in f.Tags)
             {
-                if (shown >= 4) break; if (tag.Length > 12) continue;
-                var pill = new Border { Background = Br(SURFACE3), CornerRadius = new CornerRadius(8), Padding = new Thickness(5, 1, 5, 1), Margin = new Thickness(0, 0, 3, 0) };
+                if (shown >= 4) break; if (tag.Length > 14) continue;
+                var pill = new Border { Background = Br(CARD), CornerRadius = new CornerRadius(8), Padding = new Thickness(5, 1, 5, 1), Margin = new Thickness(0, 0, 3, 0) };
                 pill.Child = new TextBlock { Text = tag, FontSize = 10, Foreground = Br(TEXTMUTED) };
                 tagPanel.Children.Add(pill); shown++;
             }
@@ -586,7 +622,7 @@ namespace SfxVault
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string path = dlg.SelectedPath;
-                if (db.Libraries.Any(l => l.RootPath == path)) { MessageBox.Show("Esta carpeta ya esta añadida."); return; }
+                if (db.Libraries.Any(l => l.RootPath == path)) { MessageBox.Show("Esta carpeta ya está añadida."); return; }
                 var lib = new SfxLibrary { Name = System.IO.Path.GetFileName(path), RootPath = path };
                 db.Libraries.Add(lib); Storage.Save(db); RefreshSidebar(); ScanLibrary(lib);
             }
@@ -719,8 +755,8 @@ namespace SfxVault
 
         void HandleMenuAction(string action)
         {
-            if (action == "Añadir librería...") AddLibrary();
-            else if (action == "Escanear librerías") RescanAllLibraries();
+            if (action == "Importar carpeta de audios...") AddLibrary();
+            else if (action == "Re-escanear librerías") RescanAllLibraries();
             else if (action == "Salir") Close();
             else if (action == "Copiar ruta del archivo") { if (selectedFile != null) Clipboard.SetText(selectedFile.FilePath); }
             else if (action == "Copiar archivo al portapapeles") CopyFileToClipboard(selectedFile);
@@ -729,8 +765,8 @@ namespace SfxVault
             else if (action == "Desmarcar favorito") { if (selectedFile != null) { selectedFile.IsFavorite = false; Storage.Save(db); RefreshFileList(); } }
             else if (action == "Todos los archivos") { activeCategory = null; activeLibraryId = null; showFavoritesOnly = false; RefreshFileList(); RefreshSidebar(); }
             else if (action == "Solo favoritos") { showFavoritesOnly = !showFavoritesOnly; RefreshFileList(); RefreshSidebar(); }
-            else if (action == "Mostrar sidebar") sidebarBorder.Visibility = Visibility.Visible;
-            else if (action == "Ocultar sidebar") sidebarBorder.Visibility = Visibility.Collapsed;
+            else if (action == "Mostrar panel lateral") sidebarBorder.Visibility = Visibility.Visible;
+            else if (action == "Ocultar panel lateral") sidebarBorder.Visibility = Visibility.Collapsed;
             else if (action == "Re-etiquetar todo")
             {
                 foreach (var f in db.Files) { var t = TagEngine.AutoTag(f.FilePath); f.Tags = t.Tags; f.Category = t.Category; }
@@ -742,12 +778,12 @@ namespace SfxVault
             }
             else if (action == "Abrir carpeta de datos")
             {
-                string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SfxVault");
+                string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EternAudio");
                 if (Directory.Exists(dir)) System.Diagnostics.Process.Start("explorer.exe", dir);
             }
             else if (action == "Exportar lista a CSV")
             {
-                var dlg = new Microsoft.Win32.SaveFileDialog { Filter = "CSV|*.csv", FileName = "sfx_library.csv" };
+                var dlg = new Microsoft.Win32.SaveFileDialog { Filter = "CSV|*.csv", FileName = "etern_audio_library.csv" };
                 if (dlg.ShowDialog() == true)
                 {
                     var lines = new List<string> { "Nombre,Ruta,Categoria,Tags,Tamano" };
@@ -757,7 +793,7 @@ namespace SfxVault
                 }
             }
             else if (action == "Atajos de teclado") MessageBox.Show("Space = Play/Pausa\nArrow Up/Down = Navegar lista\nCtrl+C = Copiar archivo\nEsc = Limpiar busqueda\nF5 = Re-escanear\nDoble clic = Reproducir", "Atajos de teclado");
-            else if (action == "Acerca de SFX Vault v1.0") MessageBox.Show("SFX Vault v1.0\nGestor de efectos de sonido\nBusqueda inteligente con 300+ sinonimos EN + ES\n21 categorias automaticas", "Acerca de SFX Vault");
+            else if (action == "Acerca de Etern Audio v1.0") MessageBox.Show("Etern Audio v1.0\nGestor de efectos de sonido profesional\nBusqueda inteligente con 300+ sinonimos EN + ES\n21 categorias automaticas", "Acerca de Etern Audio");
         }
 
         // ─── Menubar ────────────────────────────────────────────────────────────
@@ -774,7 +810,7 @@ namespace SfxVault
         Button MakeWinBtn(string content, Color hoverColor, Action onClick)
         {
             var btn = new Button { Content = content, Width = 42, Height = 42, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = Br(TEXTMUTED), FontSize = 13, Cursor = Cursors.Hand };
-            btn.MouseEnter += delegate(object s, MouseEventArgs e) { ((Button)s).Background = hoverColor == Colors.Transparent ? Br(SURFACE3) : new SolidColorBrush(hoverColor); ((Button)s).Foreground = Br(TEXT_C); };
+            btn.MouseEnter += delegate(object s, MouseEventArgs e) { ((Button)s).Background = hoverColor == Colors.Transparent ? Br(CARDHOVER) : new SolidColorBrush(hoverColor); ((Button)s).Foreground = Br(TEXT_C); };
             btn.MouseLeave += delegate(object s, MouseEventArgs e) { ((Button)s).Background = Brushes.Transparent; ((Button)s).Foreground = Br(TEXTMUTED); };
             btn.Click += delegate(object s, RoutedEventArgs e) { onClick(); };
             return btn;

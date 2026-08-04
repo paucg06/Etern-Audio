@@ -1,7 +1,8 @@
+using System;
 using Avalonia;
 using Avalonia.ReactiveUI;
 
-namespace SfxVault
+namespace EternAudio
 {
     class Program
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
-namespace SfxVault
+namespace EternAudio
 {
     [DataContract]
     public class SfxFile
@@ -60,17 +60,19 @@ namespace SfxVault
 
     public static class Storage
     {
-        private static readonly string DbPath = System.IO.Path.Combine(
+        private static readonly string DbDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "SfxVault", "sfxvault_db.json");
+            "EternAudio");
+
+        private static readonly string DbPath = Path.Combine(DbDir, "eternaudio_db.json");
 
         public static SfxDatabase Load()
         {
             try
             {
-                string dir = System.IO.Path.GetDirectoryName(DbPath);
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                if (!Directory.Exists(DbDir)) Directory.CreateDirectory(DbDir);
                 if (!File.Exists(DbPath)) return new SfxDatabase();
+
                 using (var fs = new FileStream(DbPath, FileMode.Open, FileAccess.Read))
                 {
                     var s = new DataContractJsonSerializer(typeof(SfxDatabase));
@@ -84,8 +86,7 @@ namespace SfxVault
         {
             try
             {
-                string dir = System.IO.Path.GetDirectoryName(DbPath);
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                if (!Directory.Exists(DbDir)) Directory.CreateDirectory(DbDir);
                 using (var fs = new FileStream(DbPath, FileMode.Create, FileAccess.Write))
                 {
                     var s = new DataContractJsonSerializer(typeof(SfxDatabase));

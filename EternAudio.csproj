@@ -2,14 +2,12 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <AssemblyName>SfxVault</AssemblyName>
-    <RootNamespace>SfxVault</RootNamespace>
+    <AssemblyName>EternAudio</AssemblyName>
+    <RootNamespace>EternAudio</RootNamespace>
     <Nullable>disable</Nullable>
-    <Nullable>disable</Nullable>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <Version>1.0.0</Version>
-    <Company>SFX Vault</Company>
+    <Company>Etern Studio</Company>
     <Description>Gestor de efectos de sonido con búsqueda inteligente</Description>
   </PropertyGroup>
 
@@ -22,7 +20,6 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="11.2.3" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
-  <!-- Exclude WPF-only files from Avalonia build -->
   <ItemGroup>
     <Compile Remove="WpfMainWindow.cs" />
   </ItemGroup>

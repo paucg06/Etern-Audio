@@ -12,13 +12,11 @@ using Avalonia.Media;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.Platform.Storage;
-using Avalonia.Controls.Templates;
 
-namespace SfxVault
+namespace EternAudio
 {
     public partial class MainWindow : Window
     {
-        // ─── State ───────────────────────────────────────────────────────────────
         SfxDatabase db;
         SearchEngine searchEngine = new SearchEngine();
         List<SfxFile> filteredFiles = new List<SfxFile>();
@@ -28,7 +26,6 @@ namespace SfxVault
         bool showFavoritesOnly = false;
         bool isPlaying = false;
 
-        // UI refs
         StackPanel sidebarContent;
         TextBlock lblStatus;
         TextBlock lblResultCount;
@@ -42,29 +39,26 @@ namespace SfxVault
         TextBox txtSearch;
         TextBlock searchWatermark;
 
-        // Menubar
         Border menuBar;
         bool menuBarVisible = false;
         DispatcherTimer menuHideTimer;
 
-        // Player (shell-based cross-platform)
         System.Diagnostics.Process audioProcess;
         DispatcherTimer progressTimer;
         DateTime playStartTime;
         double totalDuration = 0;
         DispatcherTimer searchDebounce;
 
-        // Colors
-        static readonly IBrush BG       = SolidColorBrush.Parse("#0a0a12");
-        static readonly IBrush SURFACE  = SolidColorBrush.Parse("#12121e");
-        static readonly IBrush SURFACE2 = SolidColorBrush.Parse("#1c1c2e");
-        static readonly IBrush SURFACE3 = SolidColorBrush.Parse("#24243a");
-        static readonly IBrush ACCENT   = SolidColorBrush.Parse("#00d9a0");
-        static readonly IBrush TEXT     = SolidColorBrush.Parse("#e2e8f0");
-        static readonly IBrush MUTED    = SolidColorBrush.Parse("#8892a4");
-        static readonly IBrush DIM      = SolidColorBrush.Parse("#4a5568");
-        static readonly IBrush BORDER   = SolidColorBrush.Parse("#2d2d45");
-        static readonly IBrush WARNING  = SolidColorBrush.Parse("#f59e0b");
+        static readonly IBrush BG       = SolidColorBrush.Parse("#121212");
+        static readonly IBrush SIDEBAR  = SolidColorBrush.Parse("#1a1a1a");
+        static readonly IBrush CARD     = SolidColorBrush.Parse("#212121");
+        static readonly IBrush CARDHOVER= SolidColorBrush.Parse("#2a2a2a");
+        static readonly IBrush ACCENT   = SolidColorBrush.Parse("#58a6ff");
+        static readonly IBrush TEXT     = SolidColorBrush.Parse("#ffffff");
+        static readonly IBrush MUTED    = SolidColorBrush.Parse("#969696");
+        static readonly IBrush DIM      = SolidColorBrush.Parse("#646464");
+        static readonly IBrush BORDER   = SolidColorBrush.Parse("#303030");
+        static readonly IBrush WARNING  = SolidColorBrush.Parse("#f0883e");
 
         public MainWindow()
         {
@@ -83,7 +77,6 @@ namespace SfxVault
 
         void WireControls()
         {
-            // Find controls
             var titleBar    = this.FindControl<Grid>("TitleBarGrid");
             menuBar         = this.FindControl<Border>("MenuBar");
             sidebarContent  = this.FindControl<StackPanel>("SidebarContent");
@@ -99,7 +92,6 @@ namespace SfxVault
             txtSearch       = this.FindControl<TextBox>("TxtSearch");
             searchWatermark = this.FindControl<TextBlock>("SearchWatermark");
 
-            // TitleBar drag
             titleBar.PointerEntered += (_, _) => ShowMenuBar();
             titleBar.PointerExited  += (_, _) => menuHideTimer?.Start();
             titleBar.PointerPressed += (s, e) =>
@@ -108,21 +100,17 @@ namespace SfxVault
                     BeginMoveDrag(e);
             };
 
-            // MenuBar hover
             menuBar.PointerEntered += (_, _) => { menuHideTimer?.Stop(); ShowMenuBar(); };
             menuBar.PointerExited  += (_, _) => menuHideTimer?.Start();
             BuildMenuBar();
 
-            // Window controls
             this.FindControl<Button>("BtnClose").Click   += (_, _) => Close();
             this.FindControl<Button>("BtnMin").Click     += (_, _) => WindowState = WindowState.Minimized;
             this.FindControl<Button>("BtnMax").Click     += (_, _) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
             this.FindControl<Button>("BtnHamburger").Click += (_, _) => ToggleSidebar();
 
-            // Add library
             this.FindControl<Button>("BtnAddLib").Click += (_, _) => AddLibrary();
 
-            // Search
             txtSearch.TextChanged += (_, _) =>
             {
                 searchWatermark.IsVisible = string.IsNullOrEmpty(txtSearch.Text);
@@ -131,12 +119,10 @@ namespace SfxVault
             this.FindControl<Button>("BtnClearSearch").Click    += (_, _) => { txtSearch.Text = ""; txtSearch.Focus(); };
             this.FindControl<Button>("BtnFavFilter").Click      += (_, _) => { showFavoritesOnly = !showFavoritesOnly; RefreshFileList(); RefreshSidebar(); };
 
-            // Sort buttons
             this.FindControl<Button>("BtnSortName").Click  += (_, _) => SortFiles("Nombre");
             this.FindControl<Button>("BtnSortCat").Click   += (_, _) => SortFiles("Categoría");
             this.FindControl<Button>("BtnSortSize").Click  += (_, _) => SortFiles("Tamaño");
 
-            // Player controls
             btnPlayPause.Click += (_, _) => TogglePlayPause();
             this.FindControl<Button>("BtnStop").Click  += (_, _) => StopPlayer();
             this.FindControl<Button>("BtnPrev").Click  += (_, _) => NavigateFile(-1);
@@ -144,7 +130,6 @@ namespace SfxVault
             this.FindControl<Button>("BtnCopyFile").Click     += (_, _) => CopyToClipboard(selectedFile);
             this.FindControl<Button>("BtnOpenExplorer").Click += (_, _) => OpenInExplorer(selectedFile);
 
-            // File list
             lstFiles.SelectionChanged += (_, _) =>
             {
                 if (lstFiles.SelectedItem is SfxFile f)
@@ -155,7 +140,6 @@ namespace SfxVault
             };
             lstFiles.DoubleTapped += (_, _) => { if (selectedFile != null) PlayFile(selectedFile); };
 
-            // Keyboard shortcuts
             this.KeyDown += Window_KeyDown;
         }
 
@@ -167,11 +151,11 @@ namespace SfxVault
 
             var menus = new (string, string[])[]
             {
-                ("Archivo", new[] { "Añadir librería...", "Escanear librerías", "---", "Exportar lista a CSV", "---", "Salir" }),
+                ("Archivo", new[] { "Importar carpeta...", "Re-escanear librerías", "---", "Exportar lista a CSV", "---", "Salir" }),
                 ("Editar",  new[] { "Copiar ruta del archivo", "Copiar archivo al portapapeles", "---", "Abrir en explorador", "---", "Marcar favorito", "Desmarcar favorito" }),
-                ("Ver",     new[] { "Todos los archivos", "Solo favoritos", "---", "Mostrar sidebar", "Ocultar sidebar" }),
+                ("Ver",     new[] { "Todos los archivos", "Solo favoritos", "---", "Mostrar panel lateral", "Ocultar panel lateral" }),
                 ("Herramientas", new[] { "Re-etiquetar todo", "Eliminar entradas huérfanas", "---", "Abrir carpeta de datos" }),
-                ("Ayuda",   new[] { "Atajos de teclado", "---", "Acerca de SFX Vault v1.0" })
+                ("Ayuda",   new[] { "Atajos de teclado", "---", "Acerca de Etern Audio v1.0" })
             };
 
             foreach (var (title, items) in menus)
@@ -198,28 +182,23 @@ namespace SfxVault
             }
         }
 
-        // ─── Sidebar ─────────────────────────────────────────────────────────────
-
         void RefreshSidebar()
         {
             if (sidebarContent == null) return;
             sidebarContent.Children.Clear();
 
-            // All files
             sidebarContent.Children.Add(MakeSidebarItem("🎵 Todos los archivos", null == activeLibraryId && !showFavoritesOnly, () =>
             {
                 activeLibraryId = null; showFavoritesOnly = false;
                 RefreshFileList(); RefreshSidebar();
             }));
 
-            // Favorites
             sidebarContent.Children.Add(MakeSidebarItem("⭐ Favoritos", showFavoritesOnly, () =>
             {
                 showFavoritesOnly = !showFavoritesOnly; activeLibraryId = null;
                 RefreshFileList(); RefreshSidebar();
             }));
 
-            // Libraries
             if (db.Libraries.Count > 0)
             {
                 sidebarContent.Children.Add(new TextBlock
@@ -239,17 +218,14 @@ namespace SfxVault
                 }));
             }
 
-            // Divider
             sidebarContent.Children.Add(new Border { Height = 1, Background = BORDER, Margin = new Thickness(10, 10, 10, 10) });
 
-            // Categories header
             sidebarContent.Children.Add(new TextBlock
             {
                 Text = "CATEGORÍAS", FontSize = 10, FontWeight = FontWeight.Bold,
                 Foreground = MUTED, Margin = new Thickness(14, 0, 14, 8)
             });
 
-            // "All" category
             sidebarContent.Children.Add(MakeSidebarItem("  Todas", activeCategory == null, () =>
             {
                 activeCategory = null; RefreshFileList(); RefreshSidebar();
@@ -265,7 +241,7 @@ namespace SfxVault
 
                 var catBtn = new Button
                 {
-                    Content = catPanel, Background = activeCategory == cat ? SolidColorBrush.Parse("#18243a") : Brushes.Transparent,
+                    Content = catPanel, Background = activeCategory == cat ? SolidColorBrush.Parse("#212121") : Brushes.Transparent,
                     BorderThickness = new Thickness(0), Padding = new Thickness(0, 5, 14, 5),
                     HorizontalContentAlignment = HorizontalAlignment.Left
                 };
@@ -279,7 +255,7 @@ namespace SfxVault
             var btn = new Button
             {
                 Content = text,
-                Background = isActive ? SolidColorBrush.Parse("#0a1a14") : Brushes.Transparent,
+                Background = isActive ? SolidColorBrush.Parse("#2858a6ff") : Brushes.Transparent,
                 BorderBrush = isActive ? ACCENT : Brushes.Transparent,
                 BorderThickness = isActive ? new Thickness(2, 0, 0, 0) : new Thickness(0),
                 Foreground = isActive ? ACCENT : MUTED,
@@ -290,8 +266,6 @@ namespace SfxVault
             btn.Click += (_, _) => onClick();
             return btn;
         }
-
-        // ─── File List ────────────────────────────────────────────────────────────
 
         void SearchDebounce()
         {
@@ -307,15 +281,8 @@ namespace SfxVault
             if (lblResultCount != null)
                 lblResultCount.Text = filteredFiles.Count == 1 ? "1 archivo" : filteredFiles.Count + " archivos";
 
-            var items = filteredFiles.Select(f => BuildFileItem(f)).ToList();
             if (lstFiles != null)
                 lstFiles.ItemsSource = filteredFiles;
-        }
-
-        Control BuildFileItem(SfxFile f)
-        {
-            // This is used as a template — bind in code since Avalonia doesn't auto-template in code-behind easily
-            return new TextBlock { Text = f.DisplayName };
         }
 
         void SortFiles(string by)
@@ -329,8 +296,6 @@ namespace SfxVault
             lstFiles.ItemsSource = null;
             lstFiles.ItemsSource = filteredFiles;
         }
-
-        // ─── Library Management ───────────────────────────────────────────────────
 
         async void AddLibrary()
         {
@@ -404,8 +369,6 @@ namespace SfxVault
         void RescanAll() { foreach (var lib in db.Libraries.ToList()) ScanLibrary(lib); }
         void RebuildIndex() { searchEngine.BuildIndex(db.Files); }
 
-        // ─── Player (shell-based, cross-platform) ─────────────────────────────────
-
         void SetupProgressTimer()
         {
             progressTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
@@ -433,7 +396,6 @@ namespace SfxVault
             {
                 if (lblNowPlaying != null) lblNowPlaying.Text = "▶  " + f.DisplayName + "  ·  " + f.Category;
 
-                string ext = System.IO.Path.GetExtension(f.FilePath).ToLower();
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     audioProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -471,7 +433,6 @@ namespace SfxVault
 
         double EstimateDuration(SfxFile f)
         {
-            // Simple WAV header read for duration estimate
             try
             {
                 string ext = System.IO.Path.GetExtension(f.FilePath).ToLower();
@@ -494,7 +455,6 @@ namespace SfxVault
                 }
             }
             catch { }
-            // Estimate from file size (128kbps average for MP3)
             return Math.Max(1, f.FileSizeBytes / 16000.0);
         }
 
@@ -525,14 +485,11 @@ namespace SfxVault
             PlayFile(selectedFile);
         }
 
-        // ─── File Operations ──────────────────────────────────────────────────────
-
         void CopyToClipboard(SfxFile f)
         {
             if (f == null || !File.Exists(f.FilePath)) return;
             try
             {
-                // On all platforms, copy the file path as text (DaVinci can accept drag from file system)
                 Clipboard?.SetTextAsync(f.FilePath);
                 if (lblStatus != null) lblStatus.Text = "Copiado: " + f.FileName;
             }
@@ -554,21 +511,12 @@ namespace SfxVault
             catch { }
         }
 
-        void ToggleFavorite(SfxFile f)
-        {
-            if (f == null) return;
-            f.IsFavorite = !f.IsFavorite;
-            Storage.Save(db);
-        }
-
-        // ─── Menu Actions ─────────────────────────────────────────────────────────
-
         void HandleMenuAction(string action)
         {
             switch (action)
             {
-                case "Añadir librería...": AddLibrary(); break;
-                case "Escanear librerías": RescanAll(); break;
+                case "Importar carpeta...": AddLibrary(); break;
+                case "Re-escanear librerías": RescanAll(); break;
                 case "Salir": Close(); break;
                 case "Copiar ruta del archivo": Clipboard?.SetTextAsync(selectedFile?.FilePath ?? ""); break;
                 case "Copiar archivo al portapapeles": CopyToClipboard(selectedFile); break;
@@ -577,8 +525,8 @@ namespace SfxVault
                 case "Desmarcar favorito": if (selectedFile != null) { selectedFile.IsFavorite = false; Storage.Save(db); RefreshFileList(); } break;
                 case "Todos los archivos": activeCategory = null; activeLibraryId = null; showFavoritesOnly = false; RefreshFileList(); RefreshSidebar(); break;
                 case "Solo favoritos": showFavoritesOnly = !showFavoritesOnly; RefreshFileList(); RefreshSidebar(); break;
-                case "Mostrar sidebar": this.FindControl<Border>("SidebarBorder").IsVisible = true; break;
-                case "Ocultar sidebar": this.FindControl<Border>("SidebarBorder").IsVisible = false; break;
+                case "Mostrar panel lateral": this.FindControl<Border>("SidebarBorder").IsVisible = true; break;
+                case "Ocultar panel lateral": this.FindControl<Border>("SidebarBorder").IsVisible = false; break;
                 case "Re-etiquetar todo":
                     foreach (var f in db.Files) { var t = TagEngine.AutoTag(f.FilePath); f.Tags = t.Tags; f.Category = t.Category; }
                     Storage.Save(db); RebuildIndex(); RefreshFileList();
@@ -588,19 +536,11 @@ namespace SfxVault
                     Storage.Save(db); RebuildIndex(); RefreshFileList();
                     break;
                 case "Abrir carpeta de datos":
-                    var dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SfxVault");
+                    var dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EternAudio");
                     if (Directory.Exists(dir)) OpenInExplorer(new SfxFile { FilePath = dir });
-                    break;
-                case "Atajos de teclado":
-                    // TODO: show dialog
-                    break;
-                case "Acerca de SFX Vault v1.0":
-                    // TODO: show dialog
                     break;
             }
         }
-
-        // ─── Menubar Show/Hide ────────────────────────────────────────────────────
 
         void SetupMenuHideTimer()
         {
@@ -631,16 +571,12 @@ namespace SfxVault
             if (sb != null) sb.IsVisible = !sb.IsVisible;
         }
 
-        // ─── Keyboard ────────────────────────────────────────────────────────────
-
         void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { txtSearch.Text = ""; txtSearch.Focus(); }
             if (e.Key == Key.F5) RescanAll();
             if (e.Key == Key.Space && !(FocusManager?.GetFocusedElement() is TextBox)) { TogglePlayPause(); e.Handled = true; }
         }
-
-        // ─── Helpers ─────────────────────────────────────────────────────────────
 
         string FormatTime(TimeSpan t)
         {

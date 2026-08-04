@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 
-namespace SfxVault
+namespace EternAudio
 {
     public partial class App : Application
     {

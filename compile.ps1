@@ -1,10 +1,10 @@
-# SFX Vault - Compilacion nativa Windows (WPF / .NET Framework 4.x)
+# Etern Audio - Compilacion nativa Windows (WPF / .NET Framework 4.x)
 # Uso: .\compile.ps1
 
 param([string]$Configuration = "Release")
 
 Write-Host "========================================"
-Write-Host "  SFX Vault - Build nativo Windows"
+Write-Host "  Etern Audio - Build nativo Windows"
 Write-Host "========================================"
 
 # Locate csc.exe
@@ -43,7 +43,7 @@ foreach ($src in $sources) {
     if (-not (Test-Path $src)) { Write-Host "ERROR: No se encontro $src"; exit 1 }
 }
 
-$out = "SfxVault.exe"
+$out = "EternAudio.exe"
 $optimize = "/optimize+"
 
 Write-Host "Compilando $($sources.Count) archivos..."
@@ -55,7 +55,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "BUILD EXITOSO"
     Write-Host "  Archivo: $out (${size} KB)"
-    Write-Host "  Ejecutar: .\SfxVault.exe"
+    Write-Host "  Ejecutar: .\EternAudio.exe"
 } else {
     Write-Host "BUILD FALLIDO"
     exit 1

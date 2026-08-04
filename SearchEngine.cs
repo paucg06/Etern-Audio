@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SfxVault
+namespace EternAudio
 {
     public class SearchEngine
     {
