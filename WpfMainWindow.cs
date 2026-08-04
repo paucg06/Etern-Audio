@@ -700,7 +700,7 @@ namespace EternAudio
                 return;
             }
 
-            lblScanStatus.Text = "Organizando y renombrando archivos...";
+            if (lblScanStatus != null) lblScanStatus.Text = "Organizando y renombrando archivos...";
             var rootLib = db.Libraries[0];
 
             BackgroundWorker worker = new BackgroundWorker();
@@ -710,9 +710,12 @@ namespace EternAudio
             };
             worker.RunWorkerCompleted += delegate(object s, RunWorkerCompletedEventArgs e)
             {
-                int count = (int)e.Result;
-                ScanLibrary(rootLib);
-                MessageBox.Show("Organización completada. Se han renombrado y organizado " + count + " archivos en español.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
+                int count = e.Result != null ? (int)e.Result : 0;
+                Dispatcher.BeginInvoke(new Action(delegate()
+                {
+                    ScanLibrary(rootLib);
+                    MessageBox.Show("Organización completada. Se han renombrado y organizado " + count + " archivos en español.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
+                }));
             };
             worker.RunWorkerAsync();
         }
@@ -735,17 +738,27 @@ namespace EternAudio
         {
             if (isScanning) return;
             isScanning = true;
-            lblScanStatus.Text = "Escaneando...";
+            if (lblScanStatus != null) lblScanStatus.Text = "Escaneando...";
             db.Files.RemoveAll(delegate(SfxFile f) { return f.LibraryId == lib.Id; });
             var worker = new BackgroundWorker { WorkerReportsProgress = true };
             int found = 0; var newFiles = new List<SfxFile>();
             worker.DoWork += delegate(object s, DoWorkEventArgs e) { ScanFolder(lib.RootPath, lib.Id, newFiles, ref found, worker); };
-            worker.ProgressChanged += delegate(object s, ProgressChangedEventArgs e) { lblScanStatus.Text = "Escaneando... " + e.ProgressPercentage.ToString() + " archivos"; };
+            worker.ProgressChanged += delegate(object s, ProgressChangedEventArgs e)
+            {
+                int currentFound = e.ProgressPercentage;
+                Dispatcher.BeginInvoke(new Action(delegate()
+                {
+                    if (lblScanStatus != null) lblScanStatus.Text = "Escaneando... " + currentFound.ToString() + " archivos";
+                }));
+            };
             worker.RunWorkerCompleted += delegate(object s, RunWorkerCompletedEventArgs e)
             {
-                db.Files.AddRange(newFiles); lib.FileCount = newFiles.Count; lib.LastScannedTicks = DateTime.Now.Ticks;
-                Storage.Save(db); RebuildIndex(); RefreshFileList(); RefreshSidebar(); isScanning = false;
-                lblScanStatus.Text = db.Files.Count.ToString() + " archivos en total";
+                Dispatcher.BeginInvoke(new Action(delegate()
+                {
+                    db.Files.AddRange(newFiles); lib.FileCount = newFiles.Count; lib.LastScannedTicks = DateTime.Now.Ticks;
+                    Storage.Save(db); RebuildIndex(); RefreshFileList(); RefreshSidebar(); isScanning = false;
+                    if (lblScanStatus != null) lblScanStatus.Text = db.Files.Count.ToString() + " archivos en total";
+                }));
             };
             worker.RunWorkerAsync();
         }
