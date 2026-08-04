@@ -1,0 +1,98 @@
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+
+namespace SfxVault
+{
+    [DataContract]
+    public class SfxFile
+    {
+        [DataMember] public string Id { get; set; }
+        [DataMember] public string FilePath { get; set; }
+        [DataMember] public string FileName { get; set; }
+        [DataMember] public string DisplayName { get; set; }
+        [DataMember] public string[] Tags { get; set; }
+        [DataMember] public string Category { get; set; }
+        [DataMember] public long FileSizeBytes { get; set; }
+        [DataMember] public string LibraryId { get; set; }
+        [DataMember] public bool IsFavorite { get; set; }
+        [DataMember] public int PlayCount { get; set; }
+        [DataMember] public long DateAddedTicks { get; set; }
+
+        public SfxFile()
+        {
+            Id = Guid.NewGuid().ToString();
+            Tags = new string[0];
+            Category = "General";
+            DateAddedTicks = DateTime.Now.Ticks;
+        }
+    }
+
+    [DataContract]
+    public class SfxLibrary
+    {
+        [DataMember] public string Id { get; set; }
+        [DataMember] public string Name { get; set; }
+        [DataMember] public string RootPath { get; set; }
+        [DataMember] public long LastScannedTicks { get; set; }
+        [DataMember] public int FileCount { get; set; }
+
+        public SfxLibrary()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
+    }
+
+    [DataContract]
+    public class SfxDatabase
+    {
+        [DataMember] public List<SfxLibrary> Libraries { get; set; }
+        [DataMember] public List<SfxFile> Files { get; set; }
+
+        public SfxDatabase()
+        {
+            Libraries = new List<SfxLibrary>();
+            Files = new List<SfxFile>();
+        }
+    }
+
+    public static class Storage
+    {
+        private static readonly string DbPath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "SfxVault", "sfxvault_db.json");
+
+        public static SfxDatabase Load()
+        {
+            try
+            {
+                string dir = System.IO.Path.GetDirectoryName(DbPath);
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                if (!File.Exists(DbPath)) return new SfxDatabase();
+                using (var fs = new FileStream(DbPath, FileMode.Open, FileAccess.Read))
+                {
+                    var s = new DataContractJsonSerializer(typeof(SfxDatabase));
+                    return (SfxDatabase)s.ReadObject(fs) ?? new SfxDatabase();
+                }
+            }
+            catch { return new SfxDatabase(); }
+        }
+
+        public static void Save(SfxDatabase db)
+        {
+            try
+            {
+                string dir = System.IO.Path.GetDirectoryName(DbPath);
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                using (var fs = new FileStream(DbPath, FileMode.Create, FileAccess.Write))
+                {
+                    var s = new DataContractJsonSerializer(typeof(SfxDatabase));
+                    s.WriteObject(fs, db);
+                }
+            }
+            catch { }
+        }
+    }
+}

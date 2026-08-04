@@ -1,0 +1,11 @@
+bin/
+obj/
+publish/
+*.user
+.vs/
+*.suo
+SfxVault.exe
+SfxVault
+crash_log.txt
+*.ilk
+*.pdb

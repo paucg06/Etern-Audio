@@ -1,0 +1,75 @@
+name: Build SFX Vault (All Platforms)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_FILE: 'SfxVault.csproj'
+
+jobs:
+  build-windows:
+    name: Windows (x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_FILE }}
+      - name: Publish
+        run: dotnet publish ${{ env.PROJECT_FILE }} -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SfxVault-windows-x64
+          path: publish/windows/SfxVault.exe
+
+  build-macos:
+    name: macOS (x64 + arm64)
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        rid: [osx-x64, osx-arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_FILE }}
+      - name: Publish
+        run: dotnet publish ${{ env.PROJECT_FILE }} -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/${{ matrix.rid }}
+      - name: Make executable
+        run: chmod +x publish/${{ matrix.rid }}/SfxVault
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SfxVault-${{ matrix.rid }}
+          path: publish/${{ matrix.rid }}/SfxVault
+
+  build-linux:
+    name: Linux (x64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Install Avalonia dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfontconfig1 libfreetype6 libx11-dev libxcursor-dev libxi-dev
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_FILE }}
+      - name: Publish
+        run: dotnet publish ${{ env.PROJECT_FILE }} -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/linux
+      - name: Make executable
+        run: chmod +x publish/linux/SfxVault
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SfxVault-linux-x64
+          path: publish/linux/SfxVault
