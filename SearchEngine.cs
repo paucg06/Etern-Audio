@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -51,8 +52,9 @@ namespace EternAudio
             }
         }
 
-        public List<SfxFile> Search(string query, string categoryFilter, bool favoritesOnly, string libraryId)
+        public List<SfxFile> Search(string query, string categoryFilter, bool favoritesOnly, string folderPathFilter, int lengthFilter = 0)
         {
+            // lengthFilter: 0 = All, 1 = Short (<30s), 2 = Long (>=30s)
             IEnumerable<SfxFile> candidates;
 
             if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(query.Trim()))
@@ -133,14 +135,30 @@ namespace EternAudio
 
             var result = candidates;
 
-            if (!string.IsNullOrEmpty(categoryFilter) && categoryFilter != "Todas")
-                result = result.Where(f => f.Category == categoryFilter);
+            // Apply category / folder filters
+            if (!string.IsNullOrEmpty(categoryFilter) && categoryFilter != "Todos los audios")
+            {
+                if (categoryFilter == "EFX / Cortos (<30s)")
+                    result = result.Where(f => f.IsShortSfx);
+                else if (categoryFilter == "Música / Largos (>=30s)")
+                    result = result.Where(f => !f.IsShortSfx);
+                else
+                    result = result.Where(f => f.Category.IndexOf(categoryFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                               f.SubCategory.IndexOf(categoryFilter, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+
+            if (!string.IsNullOrEmpty(folderPathFilter))
+            {
+                result = result.Where(f => f.FilePath.StartsWith(folderPathFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (lengthFilter == 1)
+                result = result.Where(f => f.IsShortSfx);
+            else if (lengthFilter == 2)
+                result = result.Where(f => !f.IsShortSfx);
 
             if (favoritesOnly)
                 result = result.Where(f => f.IsFavorite);
-
-            if (!string.IsNullOrEmpty(libraryId))
-                result = result.Where(f => f.LibraryId == libraryId);
 
             if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(query.Trim()))
                 result = result.OrderBy(f => f.DisplayName);

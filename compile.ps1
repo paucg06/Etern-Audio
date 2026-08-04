@@ -38,7 +38,7 @@ $refs = @(
 $refList = $refs -join ","
 
 # Source files
-$sources = @("Models.cs","TagEngine.cs","SearchEngine.cs","WpfMainWindow.cs")
+$sources = @("Models.cs","FileOrganizer.cs","TagEngine.cs","SearchEngine.cs","WpfMainWindow.cs")
 foreach ($src in $sources) {
     if (-not (Test-Path $src)) { Write-Host "ERROR: No se encontro $src"; exit 1 }
 }
@@ -48,7 +48,7 @@ $optimize = "/optimize+"
 
 Write-Host "Compilando $($sources.Count) archivos..."
 
-& $csc /target:winexe /out:"$out" $optimize /reference:"$refList" Models.cs TagEngine.cs SearchEngine.cs WpfMainWindow.cs
+& $csc /target:winexe /out:"$out" $optimize /reference:"$refList" Models.cs FileOrganizer.cs TagEngine.cs SearchEngine.cs WpfMainWindow.cs
 
 if ($LASTEXITCODE -eq 0) {
     $size = [math]::Round((Get-Item $out).Length / 1KB, 1)

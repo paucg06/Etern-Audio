@@ -15,7 +15,10 @@ namespace EternAudio
         [DataMember] public string DisplayName { get; set; }
         [DataMember] public string[] Tags { get; set; }
         [DataMember] public string Category { get; set; }
+        [DataMember] public string SubCategory { get; set; }
         [DataMember] public long FileSizeBytes { get; set; }
+        [DataMember] public double DurationSeconds { get; set; }
+        [DataMember] public bool IsShortSfx { get; set; } // true if < 30s, false if >= 30s
         [DataMember] public string LibraryId { get; set; }
         [DataMember] public bool IsFavorite { get; set; }
         [DataMember] public int PlayCount { get; set; }
@@ -26,6 +29,7 @@ namespace EternAudio
             Id = Guid.NewGuid().ToString();
             Tags = new string[0];
             Category = "General";
+            SubCategory = "General";
             DateAddedTicks = DateTime.Now.Ticks;
         }
     }
@@ -50,11 +54,27 @@ namespace EternAudio
     {
         [DataMember] public List<SfxLibrary> Libraries { get; set; }
         [DataMember] public List<SfxFile> Files { get; set; }
+        [DataMember] public string PreferredLanguage { get; set; } // "es" or "en"
 
         public SfxDatabase()
         {
             Libraries = new List<SfxLibrary>();
             Files = new List<SfxFile>();
+            PreferredLanguage = "es";
+        }
+    }
+
+    public class FolderNode
+    {
+        public string Name { get; set; }
+        public string FullPath { get; set; }
+        public bool IsDirectory { get; set; }
+        public int FileCount { get; set; }
+        public List<FolderNode> Children { get; set; }
+
+        public FolderNode()
+        {
+            Children = new List<FolderNode>();
         }
     }
 
