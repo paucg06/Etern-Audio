@@ -35,7 +35,10 @@ namespace EternAudio
             { "parpadear", "Efecto_Parpadeo_Ojos" },
             { "Notification", "Notificacion_Simple" },
             { "WhatsApp notification", "Notificacion_Whatsapp" },
-            { "IPHONE TIPEAR EFECTO DE SONIDO _ TECLADO _ PERSONA ESCRIBIENDO IPHONE SOUND EFFECT - SIN COPYRIGHT", "Teclado_Iphone_Escribiendo" }
+            { "IPHONE TIPEAR EFECTO DE SONIDO _ TECLADO _ PERSONA ESCRIBIENDO IPHONE SOUND EFFECT - SIN COPYRIGHT", "Teclado_Iphone_Escribiendo" },
+            { "mala noticias mi gente", "Mala_Noticia_Mi_Gente" },
+            { "malanoticias migente", "Mala_Noticia_Mi_Gente" },
+            { "malanoticiasmigente", "Mala_Noticia_Mi_Gente" }
         };
 
         private static readonly Dictionary<string, string> WordTranslations =
@@ -63,7 +66,14 @@ namespace EternAudio
                     return kvp.Value;
             }
 
-            string cleaned = Regex.Replace(nameWithoutExt, @"\[[A-Za-z0-9_-]{8,}\]", "");
+            // Split concatenated compound words like "malanoticiasmigente" or "efectosde"
+            string cleaned = nameWithoutExt;
+            cleaned = Regex.Replace(cleaned, @"(?i)malanoticias", "Mala Noticias ");
+            cleaned = Regex.Replace(cleaned, @"(?i)migente", " Mi Gente");
+            cleaned = Regex.Replace(cleaned, @"(?i)efectodesonido", " Efecto Sonido");
+
+            // Strip YouTube hashes [WXOXRR4vmwo], filler words
+            cleaned = Regex.Replace(cleaned, @"\[[A-Za-z0-9_-]{8,}\]", "");
             cleaned = Regex.Replace(cleaned, @"(?i)(EFECTO DE SONIDO|SOUND EFFECT|SIN COPYRIGHT|NO COPYRIGHT|MP3|WAV)", "");
             cleaned = Regex.Replace(cleaned, @"^\d+[\s\-_]*", "");
             cleaned = Regex.Replace(cleaned, @"[\-_]+", " ");
@@ -144,6 +154,7 @@ namespace EternAudio
             if (!Directory.Exists(fbxDir)) Directory.CreateDirectory(fbxDir);
             if (!Directory.Exists(musicDir)) Directory.CreateDirectory(musicDir);
 
+            // Subdirectories
             string memesDir = Path.Combine(fbxDir, "Cartoon-Animados");
             string generalSfxDir = Path.Combine(fbxDir, "Efectos Frecuentes");
             string reviewDir = Path.Combine(fbxDir, "Por_Clasificar");
@@ -154,57 +165,88 @@ namespace EternAudio
             if (!Directory.Exists(reviewDir)) Directory.CreateDirectory(reviewDir);
             if (!Directory.Exists(musicGeneralDir)) Directory.CreateDirectory(musicGeneralDir);
 
-            var looseFiles = new List<string>();
-            foreach (var f in Directory.GetFiles(rootDirectoryPath))
-                if (TagEngine.IsAudioFile(f)) looseFiles.Add(f);
+            // Recursively get ALL audio files in the entire library tree
+            var allFiles = new List<string>();
+            CollectAudioFilesRecursive(rootDirectoryPath, allFiles);
 
-            int totalLoose = looseFiles.Count;
+            int total = allFiles.Count;
 
-            for (int i = 0; i < totalLoose; i++)
+            for (int i = 0; i < total; i++)
             {
-                string file = looseFiles[i];
+                string file = allFiles[i];
                 if (onProgress != null)
-                    onProgress(i + 1, totalLoose, Path.GetFileName(file));
+                    onProgress(i + 1, total, Path.GetFileName(file));
 
                 try
                 {
-                    double duration = GetAudioDurationSeconds(file);
                     string ext = Path.GetExtension(file);
-                    string cleanName = FormatCleanSpanishFileName(file) + ext;
+                    string cleanFileNameNoExt = FormatCleanSpanishFileName(file);
+                    string targetFileName = cleanFileNameNoExt + ext;
+                    string currentDir = Path.GetDirectoryName(file);
+                    string currentFileName = Path.GetFileName(file);
 
-                    string targetFolder;
-                    if (duration >= 30.0)
+                    // Check if file needs renaming or moving
+                    bool isLooseFile = (currentDir.Equals(rootDirectoryPath, StringComparison.OrdinalIgnoreCase));
+                    bool needsRename = !currentFileName.Equals(targetFileName, StringComparison.OrdinalIgnoreCase);
+
+                    string targetFolder = currentDir;
+                    if (isLooseFile)
                     {
-                        targetFolder = musicGeneralDir;
-                    }
-                    else
-                    {
-                        var autoTagged = TagEngine.AutoTag(file);
-                        if (autoTagged.NeedsReview)
-                            targetFolder = reviewDir;
-                        else if (autoTagged.Category == "Comedia" || autoTagged.Category == "Voz")
-                            targetFolder = memesDir;
+                        double duration = GetAudioDurationSeconds(file);
+                        if (duration >= 30.0)
+                        {
+                            targetFolder = musicGeneralDir;
+                        }
                         else
-                            targetFolder = generalSfxDir;
+                        {
+                            var autoTagged = TagEngine.AutoTag(file);
+                            if (autoTagged.NeedsReview)
+                                targetFolder = reviewDir;
+                            else if (autoTagged.Category == "Comedia" || autoTagged.Category == "Voz")
+                                targetFolder = memesDir;
+                            else
+                                targetFolder = generalSfxDir;
+                        }
                     }
 
-                    string targetFilePath = Path.Combine(targetFolder, cleanName);
+                    string targetFilePath = Path.Combine(targetFolder, targetFileName);
 
-                    int counter = 1;
-                    string nameNoExt = Path.GetFileNameWithoutExtension(cleanName);
-                    while (File.Exists(targetFilePath))
+                    if (needsRename || isLooseFile)
                     {
-                        targetFilePath = Path.Combine(targetFolder, nameNoExt + "_" + counter.ToString() + ext);
-                        counter++;
-                    }
+                        if (File.Exists(targetFilePath) && !targetFilePath.Equals(file, StringComparison.OrdinalIgnoreCase))
+                        {
+                            int counter = 1;
+                            while (File.Exists(targetFilePath))
+                            {
+                                targetFilePath = Path.Combine(targetFolder, cleanFileNameNoExt + "_" + counter.ToString() + ext);
+                                counter++;
+                            }
+                        }
 
-                    File.Move(file, targetFilePath);
-                    organizedCount++;
+                        if (!targetFilePath.Equals(file, StringComparison.OrdinalIgnoreCase))
+                        {
+                            File.Move(file, targetFilePath);
+                            organizedCount++;
+                        }
+                    }
                 }
                 catch { }
             }
 
             return organizedCount;
+        }
+
+        private static void CollectAudioFilesRecursive(string path, List<string> list)
+        {
+            try
+            {
+                foreach (var f in Directory.GetFiles(path))
+                    if (TagEngine.IsAudioFile(f)) list.Add(f);
+
+                foreach (var d in Directory.GetDirectories(path))
+                    CollectAudioFilesRecursive(d, list);
+            }
+            catch { }
         }
 
         public static FolderNode BuildDirectoryTree(string rootPath)

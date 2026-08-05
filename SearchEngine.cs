@@ -54,11 +54,12 @@ namespace EternAudio
 
         public List<SfxFile> Search(string query, string categoryFilter, bool favoritesOnly, string folderPathFilter, int lengthFilter = 0)
         {
-            // lengthFilter: 0 = All, 1 = Short (<30s), 2 = Long (>=30s)
             IEnumerable<SfxFile> candidates;
 
             if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(query.Trim()))
             {
+                foreach (var f in fileById.Values)
+                    f.MatchScore = 10.0;
                 candidates = fileById.Values;
             }
             else
@@ -66,7 +67,7 @@ namespace EternAudio
                 string[] expanded = TagEngine.ExpandQuery(query);
                 string rawNorm = TagEngine.NormalizeText(query.Trim());
 
-                var scores = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                var scores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var term in expanded)
                 {
@@ -77,20 +78,20 @@ namespace EternAudio
                         foreach (var id in index[term])
                         {
                             if (!scores.ContainsKey(id)) scores[id] = 0;
-                            scores[id] += 10;
+                            scores[id] += 8.0;
                         }
                     }
 
                     foreach (var kvp in index)
                     {
                         if (kvp.Key.Length < 2) continue;
-                        int bonus = 0;
-                        if (kvp.Key.StartsWith(term, StringComparison.OrdinalIgnoreCase))
-                            bonus = 7;
+                        double bonus = 0;
+                        if (kvp.Key.Equals(term, StringComparison.OrdinalIgnoreCase))
+                            bonus = 9.5;
+                        else if (kvp.Key.StartsWith(term, StringComparison.OrdinalIgnoreCase))
+                            bonus = 7.5;
                         else if (kvp.Key.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
-                            bonus = 4;
-                        else if (term.Length >= 3 && term.StartsWith(kvp.Key, StringComparison.OrdinalIgnoreCase))
-                            bonus = 5;
+                            bonus = 5.0;
 
                         if (bonus > 0)
                         {
@@ -107,15 +108,21 @@ namespace EternAudio
                 {
                     string fnNorm = TagEngine.NormalizeText(f.FileName);
                     string dnNorm = TagEngine.NormalizeText(f.DisplayName);
-                    if (fnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
+
+                    if (dnNorm.Equals(rawNorm, StringComparison.OrdinalIgnoreCase))
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
-                        scores[f.Id] += 15;
+                        scores[f.Id] += 15.0;
+                    }
+                    else if (fnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
+                        scores[f.Id] += 12.0;
                     }
                     else if (dnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
-                        scores[f.Id] += 12;
+                        scores[f.Id] += 10.0;
                     }
                 }
 
@@ -125,9 +132,19 @@ namespace EternAudio
                 }
                 else
                 {
+                    double maxRaw = scores.Values.Max();
+
+                    foreach (var kvp in scores)
+                    {
+                        if (fileById.ContainsKey(kvp.Key))
+                        {
+                            double normalizedScore = Math.Min(10.0, Math.Max(1.0, Math.Round((kvp.Value / maxRaw) * 10.0, 1)));
+                            fileById[kvp.Key].MatchScore = normalizedScore;
+                        }
+                    }
+
                     candidates = scores
                         .OrderByDescending(kvp => kvp.Value)
-                        .ThenBy(kvp => fileById.ContainsKey(kvp.Key) ? fileById[kvp.Key].DisplayName : "")
                         .Where(kvp => fileById.ContainsKey(kvp.Key))
                         .Select(kvp => fileById[kvp.Key]);
                 }
@@ -135,7 +152,6 @@ namespace EternAudio
 
             var result = candidates;
 
-            // Apply category / folder filters
             if (!string.IsNullOrEmpty(categoryFilter) && categoryFilter != "Todos los audios")
             {
                 if (categoryFilter == "EFX / Cortos (<30s)")

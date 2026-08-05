@@ -20,6 +20,7 @@ namespace EternAudio
         [DataMember] public double DurationSeconds { get; set; }
         [DataMember] public bool IsShortSfx { get; set; } // true if < 30s, false if >= 30s
         [DataMember] public bool NeedsReview { get; set; } // true if organization was uncertain
+        [DataMember] public double MatchScore { get; set; } // 1.0 to 10.0 relevance score
         [DataMember] public string LibraryId { get; set; }
         [DataMember] public bool IsFavorite { get; set; }
         [DataMember] public int PlayCount { get; set; }
@@ -32,6 +33,7 @@ namespace EternAudio
             Category = "General";
             SubCategory = "General";
             NeedsReview = false;
+            MatchScore = 10.0;
             DateAddedTicks = DateTime.Now.Ticks;
         }
     }

@@ -32,17 +32,17 @@ namespace EternAudio
             }
         }
 
-        // ─── Colors (Identical to Etern-Notes / EternSynth) ───────────────────
+        // ─── Colors (Identical to Etern-Notes / EternSynth / Spotify Dark) ─────
         static readonly Color BG        = Color.FromRgb(18, 18, 18);     // #121212
-        static readonly Color SIDEBAR   = Color.FromRgb(26, 26, 26);     // #1a1a1a
-        static readonly Color CARD      = Color.FromRgb(33, 33, 33);     // #212121
-        static readonly Color CARDHOVER = Color.FromRgb(42, 42, 42);     // #2a2a2a
-        static readonly Color BORDER_C  = Color.FromRgb(48, 48, 48);     // #303030
+        static readonly Color SIDEBAR   = Color.FromRgb(24, 24, 24);     // #181818
+        static readonly Color CARD      = Color.FromRgb(28, 28, 28);     // #1c1c1c
+        static readonly Color CARDHOVER = Color.FromRgb(40, 40, 40);     // #282828
+        static readonly Color BORDER_C  = Color.FromRgb(42, 42, 42);     // #2a2a2a
         static readonly Color ACCENT    = Color.FromRgb(88, 166, 255);   // #58a6ff (Etern Blue)
         static readonly Color ACCENTGREEN= Color.FromRgb(57, 211, 83);   // #39d353
         static readonly Color TEXT_C    = Colors.White;
         static readonly Color TEXTMUTED = Color.FromRgb(160, 160, 160); // #a0a0a0
-        static readonly Color TEXTDIM   = Color.FromRgb(100, 100, 100);
+        static readonly Color TEXTDIM   = Color.FromRgb(110, 110, 110);
         static readonly Color WARNING_C = Color.FromRgb(240, 136, 62);  // #f0883e
 
         static SolidColorBrush Br(Color c) { return new SolidColorBrush(c); }
@@ -99,8 +99,8 @@ namespace EternAudio
 
         public WpfMainWindow()
         {
-            Width = 1380; Height = 860;
-            MinWidth = 960; MinHeight = 640;
+            Width = 1420; Height = 880;
+            MinWidth = 980; MinHeight = 650;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
             Background = Brushes.Transparent;
@@ -248,7 +248,7 @@ namespace EternAudio
 
             var txt = new TextBlock
             {
-                Text = "⚠️ Se han detectado audios sueltos en la carpeta principal. Haz clic en [Auto-Organizar] para ordenarlos y renombrarlos a español en disco.",
+                Text = "⚠️ Se han detectado audios sin organizar. Haz clic en [Verificar y Auto-Organizar] para ordenarlos y renombrarlos con barra baja en disco.",
                 FontSize = 11, Foreground = Br(TEXT_C), VerticalAlignment = VerticalAlignment.Center
             };
             Grid.SetColumn(txt, 0); grid.Children.Add(txt);
@@ -292,7 +292,7 @@ namespace EternAudio
             modalGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             modalGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var title = new TextBlock { Text = "\u26a1 Auto-Organizando y Renombrando Archivos en Local...", FontSize = 13, FontWeight = FontWeights.Bold, Foreground = Br(TEXT_C), Margin = new Thickness(0, 0, 0, 14) };
+            var title = new TextBlock { Text = "\u26a1 Renombrando Archivos con Barra Baja y Organizando...", FontSize = 13, FontWeight = FontWeights.Bold, Foreground = Br(TEXT_C), Margin = new Thickness(0, 0, 0, 14) };
             Grid.SetRow(title, 0); modalGrid.Children.Add(title);
 
             modalProgressBar = new ProgressBar { Height = 12, Minimum = 0, Maximum = 100, Value = 0, Foreground = Br(ACCENTGREEN), Background = Br(CARD), BorderThickness = new Thickness(0) };
@@ -434,11 +434,12 @@ namespace EternAudio
         Grid CreateMainArea()
         {
             var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(56) });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(56) });  // Search bar
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });     // Stats & pills
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(28) });  // Spotify table header
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Spotify Track List
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1) });
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(88) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(90) });  // Spotify Player Bar
 
             var searchBar = CreateSearchBar();
             Grid.SetRow(searchBar, 0); grid.Children.Add(searchBar);
@@ -465,6 +466,11 @@ namespace EternAudio
             statsRow.Child = sg;
             Grid.SetRow(statsRow, 1); grid.Children.Add(statsRow);
 
+            // Spotify Table Header Row
+            var tableHeader = CreateSpotifyTableHeader();
+            Grid.SetRow(tableHeader, 2); grid.Children.Add(tableHeader);
+
+            // Spotify-style Track Cards List View
             lstFiles = new ListView { Background = Brushes.Transparent, BorderThickness = new Thickness(0), SelectionMode = SelectionMode.Single };
             lstFiles.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             lstFiles.SelectionChanged += LstFiles_SelectionChanged;
@@ -475,7 +481,7 @@ namespace EternAudio
             var itemStyle = new Style(typeof(ListViewItem));
             itemStyle.Setters.Add(new Setter(ListViewItem.BackgroundProperty, Br(BG)));
             itemStyle.Setters.Add(new Setter(ListViewItem.BorderThicknessProperty, new Thickness(0)));
-            itemStyle.Setters.Add(new Setter(ListViewItem.MarginProperty, new Thickness(0, 2, 0, 2)));
+            itemStyle.Setters.Add(new Setter(ListViewItem.MarginProperty, new Thickness(0, 1, 0, 1)));
             itemStyle.Setters.Add(new Setter(ListViewItem.PaddingProperty, new Thickness(0)));
             var hoverT = new Trigger { Property = ListViewItem.IsMouseOverProperty, Value = true };
             hoverT.Setters.Add(new Setter(ListViewItem.BackgroundProperty, Br(CARDHOVER)));
@@ -485,15 +491,48 @@ namespace EternAudio
             lstFiles.ItemContainerStyle = itemStyle;
 
             var listBorder = new Border { Child = new ScrollViewer { Content = lstFiles, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }, Background = Br(BG) };
-            Grid.SetRow(listBorder, 2); grid.Children.Add(listBorder);
+            Grid.SetRow(listBorder, 3); grid.Children.Add(listBorder);
 
             var divBorder = new Border { Height = 1, Background = Br(BORDER_C) };
-            Grid.SetRow(divBorder, 3); grid.Children.Add(divBorder);
+            Grid.SetRow(divBorder, 4); grid.Children.Add(divBorder);
 
             var player = CreateSpotifyPlayerPanel();
-            Grid.SetRow(player, 4); grid.Children.Add(player);
+            Grid.SetRow(player, 5); grid.Children.Add(player);
 
             return grid;
+        }
+
+        Border CreateSpotifyTableHeader()
+        {
+            var border = new Border { Background = Br(SIDEBAR), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 0, 0, 1), Padding = new Thickness(14, 0, 14, 0) };
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });  // #
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(46) });  // Icon
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // TÍTULO
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) }); // CARPETA / CATEGORÍA
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // TAMAÑO
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) }); // COINCIDENCIA
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });  // DURA
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // ACCIONES
+
+            grid.Children.Add(MakeHeaderLabel("#", 0));
+            grid.Children.Add(MakeHeaderLabel("", 1));
+            grid.Children.Add(MakeHeaderLabel("TÍTULO", 2));
+            grid.Children.Add(MakeHeaderLabel("CARPETA / CATEGORÍA", 3));
+            grid.Children.Add(MakeHeaderLabel("TAMAÑO", 4));
+            grid.Children.Add(MakeHeaderLabel("COINCIDENCIA", 5));
+            grid.Children.Add(MakeHeaderLabel("DURA", 6));
+            grid.Children.Add(MakeHeaderLabel("ACCIONES", 7));
+
+            border.Child = grid;
+            return border;
+        }
+
+        TextBlock MakeHeaderLabel(string text, int col)
+        {
+            var tb = new TextBlock { Text = text, FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Br(TEXTDIM), VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(tb, col);
+            return tb;
         }
 
         Button MakeFilterPill(string text, bool isActive, Action onClick)
@@ -551,6 +590,8 @@ namespace EternAudio
             return border;
         }
 
+        // ─── Spotify Player Panel (Matching Screenshot) ──────────────────────────
+
         Border CreateSpotifyPlayerPanel()
         {
             var border = new Border { Background = Br(SIDEBAR), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 1, 0, 0) };
@@ -559,6 +600,7 @@ namespace EternAudio
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220) });
 
+            // Left Track Info
             var leftGrid = new Grid();
             leftGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(48) });
             leftGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -569,21 +611,23 @@ namespace EternAudio
             Grid.SetColumn(coverBorder, 0); leftGrid.Children.Add(coverBorder);
 
             var trackTextPanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
-            lblNowPlaying = new TextBlock { Text = "Etern Audio", FontSize = 13, FontWeight = FontWeights.SemiBold, Foreground = Br(TEXT_C), TextTrimming = TextTrimming.CharacterEllipsis };
+            lblNowPlaying = new TextBlock { Text = "Etern Audio", FontSize = 13, FontWeight = FontWeights.Bold, Foreground = Br(TEXT_C), TextTrimming = TextTrimming.CharacterEllipsis };
             var lblSub = new TextBlock { Text = "Selecciona un sonido para reproducir", FontSize = 11, Foreground = Br(TEXTMUTED), TextTrimming = TextTrimming.CharacterEllipsis };
             trackTextPanel.Children.Add(lblNowPlaying);
             trackTextPanel.Children.Add(lblSub);
             Grid.SetColumn(trackTextPanel, 1); leftGrid.Children.Add(trackTextPanel);
             Grid.SetColumn(leftGrid, 0); grid.Children.Add(leftGrid);
 
-            var centerPanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Width = 480 };
+            // Center Playback Controls (Shuffle, Prev, Big Play, Next, Loop)
+            var centerPanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Width = 520 };
 
             var pc = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 4) };
-            pc.Children.Add(MakeCtrlBtn("\u23ee", 14, delegate() { NavigateFile(-1); }));
-            btnPlayPause = new Button { Content = "\u25b6", FontSize = 20, Background = Br(ACCENT), BorderThickness = new Thickness(0), Foreground = Br(BG), Width = 36, Height = 36, Cursor = Cursors.Hand, Padding = new Thickness(0), Margin = new Thickness(12, 0, 12, 0) };
+            pc.Children.Add(MakeCtrlBtn("\ud83d\udd00", 12, delegate() { })); // Shuffle
+            pc.Children.Add(MakeCtrlBtn("\u23ee", 14, delegate() { NavigateFile(-1); })); // Prev
+            btnPlayPause = new Button { Content = "\u25b6", FontSize = 18, Background = Br(TEXT_C), BorderThickness = new Thickness(0), Foreground = Br(BG), Width = 36, Height = 36, Cursor = Cursors.Hand, Padding = new Thickness(0), Margin = new Thickness(12, 0, 12, 0) };
             btnPlayPause.Click += delegate(object s, RoutedEventArgs e) { TogglePlayPause(); }; pc.Children.Add(btnPlayPause);
-            pc.Children.Add(MakeCtrlBtn("\u23f9", 14, delegate() { StopPlayer(); }));
-            pc.Children.Add(MakeCtrlBtn("\u23ed", 14, delegate() { NavigateFile(1); }));
+            pc.Children.Add(MakeCtrlBtn("\u23ed", 14, delegate() { NavigateFile(1); })); // Next
+            pc.Children.Add(MakeCtrlBtn("\ud83d\udd01", 12, delegate() { })); // Loop
             centerPanel.Children.Add(pc);
 
             var pr = new Grid();
@@ -602,6 +646,7 @@ namespace EternAudio
 
             Grid.SetColumn(centerPanel, 1); grid.Children.Add(centerPanel);
 
+            // Right Volume & Actions
             var rightPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
             var volIcon = new TextBlock { Text = "\ud83d\udd0a", FontSize = 13, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) };
             slVolume = new Slider { Minimum = 0, Maximum = 1, Value = 0.85, Width = 80, VerticalAlignment = VerticalAlignment.Center };
@@ -717,7 +762,7 @@ namespace EternAudio
             return btn;
         }
 
-        // ─── File List (Spotify Track Card Rows) ──────────────────────────────────
+        // ─── File List (Exact Spotify Table Row Layout) ──────────────────────────
 
         DispatcherTimer searchTimer;
         void SearchDebounce() { if (searchTimer != null) searchTimer.Stop(); searchTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(180) }; searchTimer.Tick += delegate(object s, EventArgs e) { searchTimer.Stop(); RefreshFileList(); }; searchTimer.Start(); }
@@ -726,74 +771,84 @@ namespace EternAudio
         {
             filteredFiles = searchEngine.Search(txtSearch != null ? txtSearch.Text : "", activeCategory, showFavoritesOnly, activeFolderPath, activeLengthFilter);
             lstFiles.Items.Clear();
-            foreach (var f in filteredFiles) { var item = new ListViewItem { Tag = f }; item.Content = BuildSpotifyTrackRow(f); lstFiles.Items.Add(item); }
+
+            int trackNumber = 1;
+            bool isSearching = txtSearch != null && !string.IsNullOrWhiteSpace(txtSearch.Text);
+
+            foreach (var f in filteredFiles)
+            {
+                var item = new ListViewItem { Tag = f };
+                item.Content = BuildSpotifyRowItem(f, trackNumber, isSearching);
+                lstFiles.Items.Add(item);
+                trackNumber++;
+            }
+
             if (lblResultCount != null) lblResultCount.Text = filteredFiles.Count.ToString() + " archivo" + (filteredFiles.Count != 1 ? "s" : "");
         }
 
-        UIElement BuildSpotifyTrackRow(SfxFile f)
+        UIElement BuildSpotifyRowItem(SfxFile f, int indexNumber, bool isSearching)
         {
-            var border = new Border { Padding = new Thickness(10, 8, 10, 8), Background = Br(CARD), CornerRadius = new CornerRadius(6), Margin = new Thickness(0, 2, 0, 2) };
+            var border = new Border { Padding = new Thickness(10, 8, 10, 8), Background = Br(CARD), CornerRadius = new CornerRadius(6), Margin = new Thickness(0, 1, 0, 1) };
             var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(65) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });  // # Index Number
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(46) });  // Icon Artwork
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Track Title + Subtitle
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) }); // Folder / Subfolder
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // File Size
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) }); // Match Score
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });  // Duration
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // Actions
 
-            // Cover Icon
+            // Col 0: Index Number
+            var numTB = new TextBlock { Text = indexNumber.ToString(), FontSize = 12, Foreground = Br(TEXTDIM), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
+            Grid.SetColumn(numTB, 0); grid.Children.Add(numTB);
+
+            // Col 1: Cover Icon
             string catColor = TagEngine.GetCategoryColor(f.Category);
-            var iconBox = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(6), Background = BrH(catColor), Opacity = 0.85, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+            var iconBox = new Border { Width = 38, Height = 38, CornerRadius = new CornerRadius(6), Background = BrH(catColor), Opacity = 0.85, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
             string iconStr = f.IsShortSfx ? "\u26a1" : "\ud83c\udfb5";
             iconBox.Child = new TextBlock { Text = iconStr, FontSize = 16, Foreground = Br(BG), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetColumn(iconBox, 0); grid.Children.Add(iconBox);
+            Grid.SetColumn(iconBox, 1); grid.Children.Add(iconBox);
 
-            // Title & clean filename
+            // Col 2: Title & Subtitle Stack (DisplayName without underscores on preview)
             var textStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
-            var titleTB = new TextBlock { Text = f.DisplayName, FontSize = 13, FontWeight = FontWeights.SemiBold, Foreground = Br(TEXT_C), TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = f.FileName };
-            var fileTB = new TextBlock { Text = f.FileName, FontSize = 11, Foreground = Br(TEXTMUTED), TextTrimming = TextTrimming.CharacterEllipsis };
-            textStack.Children.Add(titleTB); textStack.Children.Add(fileTB);
-            Grid.SetColumn(textStack, 1); grid.Children.Add(textStack);
+            var titleTB = new TextBlock { Text = f.DisplayName, FontSize = 13, FontWeight = FontWeights.Bold, Foreground = Br(TEXT_C), TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = f.FileName };
 
-            // Badges
-            var badgePanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            string lenText = f.IsShortSfx ? "\u26a1 Corto (" + Math.Round(f.DurationSeconds) + "s)" : "\ud83c\udfb5 Largo (" + FormatTime(TimeSpan.FromSeconds(f.DurationSeconds)) + ")";
-            var lenBadge = new Border { Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255)), CornerRadius = new CornerRadius(4), Padding = new Thickness(5, 1, 5, 1), Margin = new Thickness(0, 0, 0, 3), HorizontalAlignment = HorizontalAlignment.Left };
-            lenBadge.Child = new TextBlock { Text = lenText, FontSize = 10, Foreground = Br(TEXT_C) };
-            badgePanel.Children.Add(lenBadge);
+            var subStack = new StackPanel { Orientation = Orientation.Horizontal };
+            string lenText = f.IsShortSfx ? "⚡ Corto" : "🎵 Largo";
+            subStack.Children.Add(new TextBlock { Text = lenText + " • ", FontSize = 11, Foreground = Br(TEXTMUTED) });
+            subStack.Children.Add(new TextBlock { Text = f.FileName, FontSize = 11, Foreground = Br(TEXTDIM), TextTrimming = TextTrimming.CharacterEllipsis });
+            textStack.Children.Add(titleTB);
+            textStack.Children.Add(subStack);
+            Grid.SetColumn(textStack, 2); grid.Children.Add(textStack);
 
-            var catStack = new StackPanel { Orientation = Orientation.Horizontal };
-            var catBadge = new Border { Background = new SolidColorBrush(Color.FromArgb(25, 0, 0, 0)), BorderBrush = BrH(catColor), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(4), Padding = new Thickness(5, 1, 5, 1), HorizontalAlignment = HorizontalAlignment.Left };
-            catBadge.Child = new TextBlock { Text = f.Category, FontSize = 10, Foreground = BrH(catColor) };
-            catStack.Children.Add(catBadge);
+            // Col 3: Subfolder / Category
+            var folderTB = new TextBlock { Text = f.SubCategory, FontSize = 11, Foreground = Br(TEXTMUTED), VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            Grid.SetColumn(folderTB, 3); grid.Children.Add(folderTB);
 
-            if (f.NeedsReview)
-            {
-                var revBadge = new Border { Background = Br(WARNING_C), CornerRadius = new CornerRadius(4), Padding = new Thickness(5, 1, 5, 1), Margin = new Thickness(4, 0, 0, 0) };
-                revBadge.Child = new TextBlock { Text = "⚠️ Revisa", FontSize = 9, FontWeight = FontWeights.Bold, Foreground = Br(BG) };
-                catStack.Children.Add(revBadge);
-            }
-
-            badgePanel.Children.Add(catStack);
-            Grid.SetColumn(badgePanel, 2); grid.Children.Add(badgePanel);
-
-            // Tags (rich tags up to 4 shown in pill format)
-            var tagPanel = new WrapPanel { VerticalAlignment = VerticalAlignment.Center };
-            int shown = 0;
-            foreach (var tag in f.Tags)
-            {
-                if (shown >= 4) break; if (tag.Length > 14) continue;
-                var pill = new Border { Background = Br(SIDEBAR), CornerRadius = new CornerRadius(6), Padding = new Thickness(4, 1, 4, 1), Margin = new Thickness(0, 0, 3, 2) };
-                pill.Child = new TextBlock { Text = tag, FontSize = 10, Foreground = Br(TEXTMUTED) };
-                tagPanel.Children.Add(pill); shown++;
-            }
-            Grid.SetColumn(tagPanel, 3); grid.Children.Add(tagPanel);
-
-            // File Size
-            var sizeBlock = new TextBlock { Text = TagEngine.FormatFileSize(f.FileSizeBytes), FontSize = 11, Foreground = Br(TEXTDIM), VerticalAlignment = VerticalAlignment.Center, TextAlignment = TextAlignment.Right, Margin = new Thickness(0, 0, 8, 0) };
+            // Col 4: File Size
+            var sizeBlock = new TextBlock { Text = TagEngine.FormatFileSize(f.FileSizeBytes), FontSize = 11, Foreground = Br(TEXTDIM), VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(sizeBlock, 4); grid.Children.Add(sizeBlock);
 
-            // Action buttons
+            // Col 5: Match Score (1 to 10)
+            if (isSearching)
+            {
+                var scoreBorder = new Border { Background = new SolidColorBrush(Color.FromArgb(30, 88, 166, 255)), CornerRadius = new CornerRadius(4), Padding = new Thickness(5, 1, 5, 1), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
+                scoreBorder.Child = new TextBlock { Text = "⭐ " + f.MatchScore.ToString("F1") + " / 10", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Br(ACCENT) };
+                Grid.SetColumn(scoreBorder, 5); grid.Children.Add(scoreBorder);
+            }
+            else if (f.NeedsReview)
+            {
+                var revBadge = new Border { Background = Br(WARNING_C), CornerRadius = new CornerRadius(4), Padding = new Thickness(5, 1, 5, 1), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
+                revBadge.Child = new TextBlock { Text = "⚠️ Revisa", FontSize = 9, FontWeight = FontWeights.Bold, Foreground = Br(BG) };
+                Grid.SetColumn(revBadge, 5); grid.Children.Add(revBadge);
+            }
+
+            // Col 6: Duration
+            var durTB = new TextBlock { Text = FormatTime(TimeSpan.FromSeconds(f.DurationSeconds)), FontSize = 11, Foreground = Br(TEXTMUTED), VerticalAlignment = VerticalAlignment.Center, TextAlignment = TextAlignment.Right };
+            Grid.SetColumn(durTB, 6); grid.Children.Add(durTB);
+
+            // Col 7: Action Buttons
             SfxFile capturedF = f;
             var ap = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right };
             var bPlay = new Button { Content = "\u25b6", FontSize = 13, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = Br(ACCENT), Cursor = Cursors.Hand, Padding = new Thickness(6, 2, 6, 2), ToolTip = "Reproducir" };
@@ -803,7 +858,7 @@ namespace EternAudio
             var bCopy = new Button { Content = "\ud83d\udccb", FontSize = 13, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = Br(TEXTDIM), Cursor = Cursors.Hand, Padding = new Thickness(4, 2, 4, 2), ToolTip = "Copiar archivo" };
             bCopy.Click += delegate(object s, RoutedEventArgs e) { e.Handled = true; CopyFileToClipboard(capturedF); };
             ap.Children.Add(bPlay); ap.Children.Add(bFav); ap.Children.Add(bCopy);
-            Grid.SetColumn(ap, 5); grid.Children.Add(ap);
+            Grid.SetColumn(ap, 7); grid.Children.Add(ap);
 
             border.Child = grid;
             return border;
@@ -823,7 +878,7 @@ namespace EternAudio
             progressModalOverlay.Visibility = Visibility.Visible;
             modalProgressBar.Value = 0;
             modalProgressPercent.Text = "0%";
-            modalProgressStatus.Text = "Iniciando escaneo de la carpeta " + rootLib.Name + "...";
+            modalProgressStatus.Text = "Iniciando escaneo y renombrado en disco...";
 
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += delegate(object s, DoWorkEventArgs e)
@@ -848,7 +903,7 @@ namespace EternAudio
                     progressModalOverlay.Visibility = Visibility.Collapsed;
                     ScanLibrary(rootLib);
                     CheckUnorganizedBanner();
-                    MessageBox.Show("Organización completada con éxito. Se han renombrado y organizado " + count + " archivos en español.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Organización completada. Se han renombrado con barra baja y organizado " + count + " archivos en español.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
                 }));
             };
             worker.RunWorkerAsync();
