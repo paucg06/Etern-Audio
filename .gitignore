@@ -1,11 +1,20 @@
+# Visual Studio / .NET
+*.user
+*.userosct
+*.sln.docstates
+*.suo
+*.user
+*.userosct
 bin/
 obj/
-publish/
-*.user
 .vs/
-*.suo
-SfxVault.exe
-SfxVault
 crash_log.txt
-*.ilk
+*.log
+
+# Windows Executables
+*.exe
 *.pdb
+
+# OS files
+.DS_Store
+Thumbs.db
