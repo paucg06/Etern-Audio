@@ -18,33 +18,50 @@ namespace EternAudio
             return false;
         }
 
-        // ─── Semantic Concept Associations ────────────────────────────────────
+        // ─── Extensive Open Bilingual (ES + EN) Concept Thesaurus ─────────────
         private static readonly Dictionary<string, string[]> ConceptGraph =
             new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            // Computing, Systems & Mouse
-            { "raton",        new[] {"raton","mouse","clic","click","boton","button","teclado","keyboard","ui","interfaz","pc","ordenador"} },
-            { "mouse",        new[] {"mouse","raton","clic","click","boton","button","teclado","keyboard","ui","interfaz","pc","ordenador"} },
+            // Vulgarities, Slang & Bodily Sounds (caca, mierda, shit, poop, fart, pedo)
+            { "caca",        new[] {"caca","mierda","shit","poop","crap","turd","dung","feces","sucio","dirty","pedo","fart","comedia","meme","perro","dog"} },
+            { "mierda",      new[] {"mierda","caca","shit","poop","crap","turd","dung","feces","sucio","dirty","pedo","fart","comedia","meme"} },
+            { "shit",        new[] {"shit","caca","mierda","poop","crap","turd","dung","feces","dirty","fart","pedo","meme","comedy"} },
+            { "poop",        new[] {"poop","shit","caca","mierda","crap","turd","dung","feces","dirty","fart","pedo","meme"} },
+            { "crap",        new[] {"crap","shit","poop","caca","mierda","turd","dirty","meme"} },
+            { "pedo",        new[] {"pedo","fart","toot","gases","gas","caca","mierda","shit","poop","comedia","funny"} },
+            { "fart",        new[] {"fart","pedo","toot","gases","gas","caca","mierda","shit","poop","comedy","funny"} },
+
+            // Poultry & Birds (pollo, gallo, chicken, rooster, nugget, kikiriki)
+            { "gallo",        new[] {"gallo","pollo","rooster","chicken","kikiriki","kikirikigallo","nugget","granja","ave","pajaro","farm","cock","bird","corral"} },
+            { "pollo",        new[] {"pollo","gallo","chicken","rooster","kikiriki","kikirikigallo","nugget","granja","ave","pajaro","farm","bird","fried_chicken"} },
+            { "chicken",      new[] {"chicken","pollo","gallo","rooster","kikiriki","nugget","farm","granja","bird","ave"} },
+            { "rooster",      new[] {"rooster","gallo","pollo","chicken","kikiriki","farm","granja","bird","ave"} },
+            { "kikiriki",     new[] {"kikiriki","kikirikigallo","gallo","pollo","rooster","chicken","granja","ave"} },
+            { "nugget",       new[] {"nugget","chicken","pollo","gallo","rooster","comedia","meme"} },
+
+            // Domestic Animals & Wildlife
+            { "perro",        new[] {"perro","dog","bark","ladridos","ladrido","puppy","hound","canino","mascota","can","caca","poop"} },
+            { "dog",          new[] {"dog","perro","bark","ladrido","puppy","hound","canino","mascota"} },
+            { "gato",         new[] {"gato","cat","meow","maullido","miau","kitten","felino","purr","ronroneo"} },
+            { "cat",          new[] {"cat","gato","meow","maullido","miau","kitten","felino","purr"} },
+            { "mono",         new[] {"mono","monkey","ape","chimpance","gorila","selva","jungle","primate"} },
+            { "monkey",       new[] {"monkey","mono","ape","chimpance","gorila","selva","jungle"} },
+
+            // Computing, Mouse, Systems & Tech
+            { "raton",        new[] {"raton","mouse","clic","click","boton","button","teclado","keyboard","ui","interfaz","pc","ordenador","roedor","queso","select"} },
+            { "mouse",        new[] {"mouse","raton","clic","click","boton","button","teclado","keyboard","ui","interfaz","pc","ordenador","roedor","queso","select"} },
+            { "click",        new[] {"click","clic","mouse","raton","boton","button","select","press","ui","interfaz","teclado","keyboard","pulsar"} },
+            { "clic",         new[] {"clic","click","mouse","raton","boton","button","select","press","ui","interfaz","teclado","keyboard","pulsar"} },
             { "windows",      new[] {"windows","windows_xp","sistema","ordenador","pc","error","apagandose","error_windows","software"} },
-            { "xp",           new[] {"xp","windows","windows_xp","sistema","ordenador","pc","error"} },
             { "teclado",      new[] {"teclado","keyboard","typing","tipear","click","clic","boton","iphone","pc","escritura"} },
 
-            // Animals & Farm
-            { "gallo",        new[] {"gallo","pollo","rooster","chicken","kikiriki","kikirikigallo","granja","ave","pajaro","farm"} },
-            { "pollo",        new[] {"pollo","gallo","chicken","rooster","kikiriki","kikirikigallo","granja","ave","pajaro","farm"} },
-            { "kikiriki",     new[] {"kikiriki","kikirikigallo","gallo","pollo","rooster","chicken","granja","ave"} },
-            { "perro",        new[] {"perro","dog","bark","ladritos","ladrido","puppy","canino"} },
-            { "gato",         new[] {"gato","cat","meow","maullido","miau","kitten","felino"} },
-            { "mono",         new[] {"mono","monkey","ape","chimpance","gorila","selva"} },
-
-            // Anime, Japan & Manga
-            { "japon",        new[] {"japon","japan","anime","manga","otaku","tokyo","ninja","samurai","japones","goku","doraemon","kirby"} },
-            { "anime",        new[] {"anime","manga","japon","japones","cartoon","dibujos","animados","otaku","goku","doraemon","kirby","naruto","sensei","hora_hora"} },
-            { "sensei",       new[] {"sensei","anime","japones","frase","hora_hora","manga","otaku"} },
-            { "hora_hora",    new[] {"hora_hora","grito_anime","sensei","anime","japones","manga"} },
-            { "kirby",        new[] {"kirby","cartoon","funny","game","nintendo","comedia","meme","dibujos","nintendo_switch"} },
-            { "goku",         new[] {"goku","dragonball","anime","drama","meme","comedy","saiyan","kamehameha"} },
-            { "doraemon",     new[] {"doraemon","anime","cartoon","funny","dibujos","comedia","gato_cosmico"} },
+            // House, Architecture & Domestic
+            { "casa",         new[] {"casa","house","home","hogar","puerta","door","ventana","window","cocina","habitacion","pasos","madera","llave","lock","reloj","ambiente","edificio","domestico"} },
+            { "house",        new[] {"house","casa","home","hogar","puerta","door","ventana","window","room","key","lock","domestic"} },
+            { "home",         new[] {"home","house","casa","hogar","puerta","door","room","domestic"} },
+            { "puerta",       new[] {"puerta","door","gate","pestillo","lock","llave","porton","madera","cerrar","abrir","golpe_puerta","casa","house"} },
+            { "door",         new[] {"door","puerta","gate","lock","key","wood","close","open","house","home"} },
+            { "ventana",      new[] {"ventana","window","cristal","glass","abrir","casa","house"} },
 
             // Water, Liquids & Nature
             { "agua",         new[] {"agua","water","boil","hervir","liquido","lluvia","rain","rio","river","mar","sea","splash","fluido"} },
@@ -53,17 +70,29 @@ namespace EternAudio
             { "lluvia",       new[] {"lluvia","rain","drizzle","shower","agua","chubasco","tormenta","water"} },
             { "viento",       new[] {"viento","wind","breeze","gust","brisa","rafaga","tormenta","aire"} },
 
-            // House, Domestic & Buildings
-            { "casa",         new[] {"casa","house","home","hogar","puerta","door","ventana","window","cocina","habitacion","pasos","madera","llave","edificio"} },
-            { "puerta",       new[] {"puerta","door","gate","pestillo","lock","llave","madera","casa"} },
+            // Vehicles & Transport
+            { "coche",        new[] {"coche","auto","car","vehiculo","motor","engine","rueda","wheel","freno","brake","claxon","horn","trafico","traffic"} },
+            { "car",          new[] {"car","coche","auto","vehicle","engine","motor","drive","wheel","brake","horn"} },
 
-            // Hits & Punches
+            // Anime, Japan & Cartoons
+            { "japon",        new[] {"japon","japan","anime","manga","otaku","tokyo","ninja","samurai","japones","japanese","goku","doraemon","kirby","nintendo","ching_cheng"} },
+            { "japan",        new[] {"japan","japon","anime","manga","otaku","tokyo","ninja","samurai","japones","japanese","goku","doraemon","kirby","nintendo"} },
+            { "anime",        new[] {"anime","manga","japon","japones","japanese","cartoon","dibujos","animados","otaku","goku","doraemon","kirby","naruto","sensei","hora_hora"} },
+            { "cartoon",      new[] {"cartoon","anime","dibujos","animados","comedia","funny","comedy","silly","humor","meme","kirby","doraemon","animacion"} },
+            { "sensei",       new[] {"sensei","anime","japones","frase","hora_hora","manga","otaku"} },
+            { "goku",         new[] {"goku","dragonball","anime","drama","meme","comedy","saiyan","kamehameha"} },
+            { "kirby",        new[] {"kirby","cartoon","funny","game","nintendo","comedia","meme","dibujos","nintendo_switch"} },
+
+            // Hits, Punches & Combat
             { "golpe",        new[] {"golpe","hit","punch","impact","impacto","crash","smash","puñetazo","slap","puño","puñetazo_dani"} },
             { "puñetazo",     new[] {"puñetazo","punch","hit","golpe","impacto","boxeo","fight","pelea","puño","puñetazo_dani"} },
             { "hit",          new[] {"hit","golpe","punch","impact","impacto","smash","slap","puñetazo"} },
+            { "arma",         new[] {"arma","gun","weapon","shoot","fire","pistola","fusil","disparo","bala","tiro","espada"} },
+            { "espada",       new[] {"espada","sword","blade","slash","slice","clang","hoja","tajo","corte","metal"} },
 
-            // Explosions
-            { "explosion",    new[] {"explosion","explosión","boom","blast","bang","bomba","estallido","fuego","fire"} }
+            // Voice & Screams
+            { "grito",        new[] {"grito","scream","yell","shout","cry","gritar","chillar","terror","horror","miedo","ayuda","ahhh"} },
+            { "voz",          new[] {"voz","voice","human","speak","talk","humano","hablar","habla","grito","frase","persona"} }
         };
 
         private static readonly Dictionary<string, string> CategoryMap =
@@ -71,10 +100,10 @@ namespace EternAudio
         {
             {"explosion","Explosión"},{"bomba","Explosión"},{"boom","Explosión"},
             {"impact","Golpes-Puñetazos"},{"impacto","Golpes-Puñetazos"},{"hit","Golpes-Puñetazos"},{"golpe","Golpes-Puñetazos"},{"puñetazo","Golpes-Puñetazos"},
-            {"gallo","Animales"},{"pollo","Animales"},{"perro","Animales"},{"gato","Animales"},{"mono","Animales"},
+            {"gallo","Animales"},{"pollo","Animales"},{"chicken","Animales"},{"rooster","Animales"},{"perro","Animales"},{"dog","Animales"},{"gato","Animales"},{"cat","Animales"},{"mono","Animales"},{"caca","Animales"},{"mierda","Animales"},{"shit","Animales"},{"poop","Animales"},{"pedo","Animales"},{"fart","Animales"},
             {"agua","Naturaleza-Liquidos"},{"water","Naturaleza-Liquidos"},{"boil","Naturaleza-Liquidos"},{"lluvia","Naturaleza-Liquidos"},{"viento","Naturaleza-Liquidos"},
-            {"windows","Internet-Ordenadores"},{"xp","Internet-Ordenadores"},{"teclado","Internet-Ordenadores"},{"mouse","Internet-Ordenadores"},{"raton","Internet-Ordenadores"},
-            {"anime","Anime-Manga"},{"japon","Anime-Manga"},{"sensei","Anime-Manga"},{"hora_hora","Anime-Manga"},{"goku","Anime-Manga"},{"doraemon","Anime-Manga"},{"kirby","Anime-Manga"},
+            {"windows","Internet-Ordenadores"},{"teclado","Internet-Ordenadores"},{"mouse","Internet-Ordenadores"},{"raton","Internet-Ordenadores"},
+            {"anime","Anime-Manga"},{"japon","Anime-Manga"},{"japan","Anime-Manga"},{"sensei","Anime-Manga"},{"goku","Anime-Manga"},{"doraemon","Anime-Manga"},{"kirby","Anime-Manga"},
             {"puerta","Objetos-Herramientas"},{"ventana","Objetos-Herramientas"},{"casa","Objetos-Herramientas"}
         };
 
@@ -161,9 +190,8 @@ namespace EternAudio
             double duration = FileOrganizer.GetAudioDurationSeconds(filePath);
             bool isShort = duration < 30.0;
 
-            // Determine suggested subfolder & confidence score
             string suggestedSubfolder = "Efectos Frecuentes";
-            double confidence = 0.50; // default 50%
+            double confidence = 0.50;
 
             if (categoryCounts.Count > 0)
             {

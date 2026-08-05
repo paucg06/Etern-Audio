@@ -109,8 +109,6 @@ namespace EternAudio
                         else if (kvp.Key.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                  term.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)
                             bonus = 5.5;
-                        else if (kvp.Key.Length >= 4 && term.Length >= 4 && TagEngine.LevenshteinDistance(kvp.Key, term) <= 2)
-                            bonus = 4.0;
 
                         if (bonus > 0)
                         {
@@ -131,7 +129,6 @@ namespace EternAudio
                     string rawNormFile = TagEngine.NormalizeText(f.OriginalRawName ?? "");
                     string fpNorm = TagEngine.NormalizeText(f.FilePath);
 
-                    // Exact or substring match in DisplayName / FileName
                     if (dnNorm.Equals(rawNorm, StringComparison.OrdinalIgnoreCase))
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
@@ -149,28 +146,20 @@ namespace EternAudio
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
                         scores[f.Id] += 8.0;
                     }
-
-                    // Check fuzzy distance against DisplayName words
-                    var words = dnNorm.Split(new char[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var w in words)
-                    {
-                        if (w.Length >= 4 && rawNorm.Length >= 4 && TagEngine.LevenshteinDistance(w, rawNorm) <= 2)
-                        {
-                            if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
-                            scores[f.Id] += 7.0;
-                        }
-                    }
                 }
 
-                if (scores.Count == 0)
+                // Filter out zero / noise scores (must have score >= 4.0 to be included)
+                var validScores = scores.Where(kvp => kvp.Value >= 4.0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                if (validScores.Count == 0)
                 {
                     candidates = new List<SfxFile>();
                 }
                 else
                 {
-                    double maxRaw = scores.Values.Max();
+                    double maxRaw = validScores.Values.Max();
 
-                    foreach (var kvp in scores)
+                    foreach (var kvp in validScores)
                     {
                         if (fileById.ContainsKey(kvp.Key))
                         {
@@ -179,7 +168,7 @@ namespace EternAudio
                         }
                     }
 
-                    candidates = scores
+                    candidates = validScores
                         .OrderByDescending(kvp => kvp.Value)
                         .Where(kvp => fileById.ContainsKey(kvp.Key))
                         .Select(kvp => fileById[kvp.Key]);
@@ -199,7 +188,6 @@ namespace EternAudio
                                                f.SubCategory.IndexOf(categoryFilter, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            // Only apply folder filter if user is NOT searching globally
             if (!isGlobalSearchQuery && !string.IsNullOrEmpty(folderPathFilter))
             {
                 result = result.Where(f => f.FilePath.StartsWith(folderPathFilter, StringComparison.OrdinalIgnoreCase));
