@@ -182,7 +182,7 @@ namespace EternAudio
         {
             var outerBorder = new Border
             {
-                CornerRadius = new CornerRadius(10),
+                CornerRadius = new CornerRadius(12),
                 Background = Br(BG),
                 BorderBrush = Br(BORDER_C),
                 BorderThickness = new Thickness(1),
@@ -207,7 +207,7 @@ namespace EternAudio
             Grid.SetRow(bannerUnorganized, 2); mainGrid.Children.Add(bannerUnorganized);
 
             contentGrid = new Grid();
-            contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(270) });
+            contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
             contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
             contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             Grid.SetRow(contentGrid, 3); mainGrid.Children.Add(contentGrid);
@@ -223,7 +223,6 @@ namespace EternAudio
 
             rootOverlayGrid.Children.Add(mainGrid);
 
-            // Progress Modal Overlay
             progressModalOverlay = CreateProgressModalOverlay();
             rootOverlayGrid.Children.Add(progressModalOverlay);
 
@@ -681,7 +680,7 @@ namespace EternAudio
             return btn;
         }
 
-        // ─── Sidebar Tree Population ───────────────────────────────────────────
+        // ─── Modernized Sidebar Tree + Drag & Drop Target + Context Menu ───────
 
         void RefreshSidebar()
         {
@@ -715,7 +714,7 @@ namespace EternAudio
             var capturedNode = node;
             bool isSelected = activeFolderPath == node.FullPath;
 
-            var itemGrid = new Grid { Margin = new Thickness(depth * 12, 1, 0, 1) };
+            var itemGrid = new Grid { Margin = new Thickness(depth * 14, 2, 0, 2) };
             itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
@@ -731,8 +730,33 @@ namespace EternAudio
                 Foreground = isSelected ? Br(ACCENT) : Br(TEXT_C),
                 FontSize = depth == 0 ? 12 : 11,
                 FontWeight = depth == 0 ? FontWeights.SemiBold : FontWeights.Normal,
-                Cursor = Cursors.Hand, Padding = new Thickness(8, 5, 8, 5),
-                HorizontalContentAlignment = HorizontalAlignment.Left
+                Cursor = Cursors.Hand, Padding = new Thickness(10, 6, 10, 6),
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                AllowDrop = true
+            };
+
+            // Drag & Drop Target Handling (Drop audio onto folder!)
+            btnNode.DragOver += delegate(object s, DragEventArgs e)
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effects = DragDropEffects.Move;
+                else e.Effects = DragDropEffects.None;
+                e.Handled = true;
+            };
+
+            btnNode.Drop += delegate(object s, DragEventArgs e)
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    if (files != null && files.Length > 0)
+                    {
+                        foreach (string file in files)
+                        {
+                            FileOrganizer.MoveFileToFolder(file, capturedNode.FullPath);
+                        }
+                        if (db.Libraries.Count > 0) ScanLibrary(db.Libraries[0]);
+                    }
+                }
             };
 
             btnNode.Click += delegate(object s, RoutedEventArgs e)
@@ -741,6 +765,29 @@ namespace EternAudio
                 activeCategory = null; showFavoritesOnly = false;
                 RefreshFileList(); RefreshSidebar();
             };
+
+            // Folder Context Menu (Right Click)
+            var folderCM = new ContextMenu { Background = Br(CARD), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(1) };
+
+            var miRename = new MenuItem { Header = "✏️ Renombrar carpeta", Background = Brushes.Transparent, Foreground = Br(TEXT_C), FontSize = 12 };
+            miRename.Click += delegate(object s, RoutedEventArgs e) { PromptRenameFolder(capturedNode); };
+            folderCM.Items.Add(miRename);
+
+            var miDelete = new MenuItem { Header = "🗑️ Eliminar carpeta", Background = Brushes.Transparent, Foreground = Br(TEXT_C), FontSize = 12 };
+            miDelete.Click += delegate(object s, RoutedEventArgs e) { DeleteFolderPrompt(capturedNode); };
+            folderCM.Items.Add(miDelete);
+
+            var miNewSub = new MenuItem { Header = "➕ Crear Subcarpeta", Background = Brushes.Transparent, Foreground = Br(TEXT_C), FontSize = 12 };
+            miNewSub.Click += delegate(object s, RoutedEventArgs e) { CreateSubfolderPrompt(capturedNode); };
+            folderCM.Items.Add(miNewSub);
+
+            folderCM.Items.Add(new Separator());
+
+            var miOpen = new MenuItem { Header = "📁 Abrir en Explorador", Background = Brushes.Transparent, Foreground = Br(TEXT_C), FontSize = 12 };
+            miOpen.Click += delegate(object s, RoutedEventArgs e) { if (Directory.Exists(capturedNode.FullPath)) System.Diagnostics.Process.Start("explorer.exe", capturedNode.FullPath); };
+            folderCM.Items.Add(miOpen);
+
+            btnNode.ContextMenu = folderCM;
 
             Grid.SetColumn(btnNode, 0); itemGrid.Children.Add(btnNode);
 
@@ -753,6 +800,104 @@ namespace EternAudio
             {
                 RenderTreeNode(container, child, depth + 1);
             }
+        }
+
+        void PromptRenameFolder(FolderNode node)
+        {
+            if (node == null || !Directory.Exists(node.FullPath)) return;
+            string oldName = node.Name;
+            string parentDir = System.IO.Path.GetDirectoryName(node.FullPath);
+            string input = ShowInputPrompt("Introduce el nuevo nombre para la carpeta:", "Renombrar Carpeta", oldName);
+            if (!string.IsNullOrWhiteSpace(input) && input != oldName)
+            {
+                string cleanNewName = input.Trim();
+                string newFolderPath = System.IO.Path.Combine(parentDir, cleanNewName);
+                try
+                {
+                    Directory.Move(node.FullPath, newFolderPath);
+                    if (db.Libraries.Count > 0) ScanLibrary(db.Libraries[0]);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al renombrar la carpeta: " + ex.Message);
+                }
+            }
+        }
+
+        void DeleteFolderPrompt(FolderNode node)
+        {
+            if (node == null || !Directory.Exists(node.FullPath)) return;
+            if (db.Libraries.Count > 0 && node.FullPath.Equals(db.Libraries[0].RootPath, StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("No se puede eliminar la carpeta raíz principal.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var res = MessageBox.Show("¿Seguro que deseas eliminar la carpeta '" + node.Name + "'?", "Eliminar Carpeta", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (res == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    Directory.Delete(node.FullPath, true);
+                    if (db.Libraries.Count > 0) ScanLibrary(db.Libraries[0]);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al eliminar la carpeta: " + ex.Message);
+                }
+            }
+        }
+
+        void CreateSubfolderPrompt(FolderNode node)
+        {
+            if (node == null || !Directory.Exists(node.FullPath)) return;
+            string input = ShowInputPrompt("Nombre de la nueva subcarpeta:", "Crear Subcarpeta", "Nueva_Categoria");
+            if (!string.IsNullOrWhiteSpace(input))
+            {
+                string newDir = System.IO.Path.Combine(node.FullPath, input.Trim());
+                try
+                {
+                    Directory.CreateDirectory(newDir);
+                    if (db.Libraries.Count > 0) ScanLibrary(db.Libraries[0]);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al crear la subcarpeta: " + ex.Message);
+                }
+            }
+        }
+
+        string ShowInputPrompt(string message, string title, string defaultValue)
+        {
+            var win = new Window
+            {
+                Title = title, Width = 380, Height = 170, WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this, WindowStyle = WindowStyle.ToolWindow, Background = Br(SIDEBAR), ResizeMode = ResizeMode.NoResize
+            };
+
+            var grid = new Grid { Margin = new Thickness(16) };
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            var lbl = new TextBlock { Text = message, Foreground = Br(TEXT_C), FontSize = 12, Margin = new Thickness(0, 0, 0, 8) };
+            Grid.SetRow(lbl, 0); grid.Children.Add(lbl);
+
+            var tb = new TextBox { Text = defaultValue, FontSize = 13, Foreground = Br(TEXT_C), Background = Br(CARD), BorderBrush = Br(BORDER_C), Padding = new Thickness(6, 4, 6, 4), Margin = new Thickness(0, 0, 0, 12) };
+            Grid.SetRow(tb, 1); grid.Children.Add(tb);
+
+            var bp = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+            var btnOk = new Button { Content = "Aceptar", Width = 80, Height = 28, Background = Br(ACCENT), Foreground = Br(BG), BorderThickness = new Thickness(0), Cursor = Cursors.Hand, Margin = new Thickness(0, 0, 8, 0) };
+            string result = null;
+            btnOk.Click += delegate(object s, RoutedEventArgs e) { result = tb.Text; win.Close(); };
+            var btnCancel = new Button { Content = "Cancelar", Width = 80, Height = 28, Background = Br(CARD), Foreground = Br(TEXTMUTED), BorderThickness = new Thickness(1), BorderBrush = Br(BORDER_C), Cursor = Cursors.Hand };
+            btnCancel.Click += delegate(object s, RoutedEventArgs e) { win.Close(); };
+            bp.Children.Add(btnOk); bp.Children.Add(btnCancel);
+            Grid.SetRow(bp, 2); grid.Children.Add(bp);
+
+            win.Content = grid;
+            win.ShowDialog();
+            return result;
         }
 
         FrameworkElement MakeSidebarItem(string text, bool isActive, Action onClick)
@@ -924,11 +1069,11 @@ namespace EternAudio
 
                     if (count == 0)
                     {
-                        MessageBox.Show("✅ Todos los " + db.Files.Count + " archivos de tu biblioteca ya están perfectamente categorizados y renombrados con barra baja en disco.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("✅ Todos los " + db.Files.Count + " archivos de tu biblioteca ya están perfectamente categorizados y renombrados con barra baja.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        MessageBox.Show("✅ Organización completada con éxito. Se han categorizado y renombrado con barra baja " + count + " archivos en español.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("✅ Organización completada con éxito. Se han reorganizado o renombrado " + count + " archivos en español.", "Etern Audio", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }));
             };
@@ -1035,9 +1180,27 @@ namespace EternAudio
         void StopPlayer() { mediaPlayer.Stop(); isPlaying = false; btnPlayPause.Content = "\u25b6"; slProgress.Value = 0; lblCurrentTime.Text = "0:00"; }
         void NavigateFile(int dir) { if (filteredFiles.Count == 0) return; int idx = selectedFile == null ? -1 : filteredFiles.FindIndex(delegate(SfxFile f) { return f.Id == selectedFile.Id; }); SelectAndPlay(filteredFiles[(idx + dir + filteredFiles.Count) % filteredFiles.Count]); }
 
-        // ─── File Ops ────────────────────────────────────────────────────────────
+        // ─── File Ops & Robust Clipboard Copier ──────────────────────────────────
 
-        void CopyFileToClipboard(SfxFile f) { if (f == null || !File.Exists(f.FilePath)) return; try { var sc = new StringCollection(); sc.Add(f.FilePath); Clipboard.SetFileDropList(sc); lblScanStatus.Text = "Copiado: " + f.FileName; } catch { } }
+        void CopyFileToClipboard(SfxFile f)
+        {
+            if (f == null || !File.Exists(f.FilePath)) return;
+            try
+            {
+                var data = new DataObject();
+                var sc = new StringCollection();
+                sc.Add(f.FilePath);
+                data.SetFileDropList(sc);
+                data.SetText(f.FilePath);
+                Clipboard.SetDataObject(data, true);
+                if (lblScanStatus != null) lblScanStatus.Text = "Copiado al portapapeles: " + f.FileName;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al copiar: " + ex.Message);
+            }
+        }
+
         void OpenSelectedInExplorer() { if (selectedFile != null && File.Exists(selectedFile.FilePath)) System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + selectedFile.FilePath + "\""); }
         void ToggleFavorite(SfxFile f) { if (f == null) return; f.IsFavorite = !f.IsFavorite; Storage.Save(db); }
         void PlaySelectedFile() { if (selectedFile != null) PlayFile(selectedFile); }
@@ -1135,7 +1298,7 @@ namespace EternAudio
         void SetupMenuHideTimer() { menuHideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) }; menuHideTimer.Tick += delegate(object s, EventArgs e) { menuHideTimer.Stop(); HideMenuBar(); }; }
         void ShowMenuBar() { menuHideTimer.Stop(); if (menuBarVisible) return; menuBarBorder.Height = 30; ((Grid)menuBarBorder.Parent).RowDefinitions[1].Height = new GridLength(30); menuBarVisible = true; }
         void HideMenuBar() { if (!menuBarVisible) return; menuBarBorder.Height = 0; ((Grid)menuBarBorder.Parent).RowDefinitions[1].Height = new GridLength(0); menuBarVisible = false; }
-        void ToggleSidebar() { isSidebarCollapsed = !isSidebarCollapsed; contentGrid.ColumnDefinitions[0].Width = isSidebarCollapsed ? new GridLength(0) : new GridLength(270); sidebarBorder.Visibility = isSidebarCollapsed ? Visibility.Collapsed : Visibility.Visible; }
+        void ToggleSidebar() { isSidebarCollapsed = !isSidebarCollapsed; contentGrid.ColumnDefinitions[0].Width = isSidebarCollapsed ? new GridLength(0) : new GridLength(280); sidebarBorder.Visibility = isSidebarCollapsed ? Visibility.Collapsed : Visibility.Visible; }
 
         // ─── Helpers ────────────────────────────────────────────────────────────
 

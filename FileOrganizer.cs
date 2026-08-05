@@ -36,9 +36,6 @@ namespace EternAudio
             { "Notification", "Notificacion_Simple" },
             { "WhatsApp notification", "Notificacion_Whatsapp" },
             { "IPHONE TIPEAR EFECTO DE SONIDO _ TECLADO _ PERSONA ESCRIBIENDO IPHONE SOUND EFFECT - SIN COPYRIGHT", "Teclado_Iphone_Escribiendo" },
-            { "mala noticias mi gente", "Mala_Noticia_Mi_Gente" },
-            { "malanoticias migente", "Mala_Noticia_Mi_Gente" },
-            { "malanoticiasmigente", "Mala_Noticia_Mi_Gente" },
             { "Puñetazo Dani", "Puñetazo_Dani" },
             { "Pollo de goma largo", "Pollo_De_Goma_Largo" },
             { "Agua boil", "Sonido_Agua_Hirviendo" }
@@ -70,13 +67,21 @@ namespace EternAudio
             }
 
             string cleaned = nameWithoutExt;
+
+            // Strip track numbers at start: "1 3 4 6 Limpiando" or "01 - " or "track 12"
+            cleaned = Regex.Replace(cleaned, @"^[\d\s\-_]+", "");
+            cleaned = Regex.Replace(cleaned, @"(?i)^track[\s\-_]*\d+[\s\-_]*", "");
+
+            // Strip YouTube IDs [WXOXRR4vmwo]
+            cleaned = Regex.Replace(cleaned, @"\[[A-Za-z0-9_-]{8,}\]", "");
+
+            // Strip YouTube converter & audio noise keywords
+            cleaned = Regex.Replace(cleaned, @"(?i)(YouTube|ytmp3|downloader|download|mp3\s*cut|mp3cut|_cut|cut|edited|converter|free\s*download|no\s*copyright|sin\s*copyright|sound\s*effect|efecto\s*de\s*sonido|audio\s*effect|mp3|wav|ogg|flac)", "");
+
             cleaned = Regex.Replace(cleaned, @"(?i)malanoticias", "Mala Noticias ");
             cleaned = Regex.Replace(cleaned, @"(?i)migente", " Mi Gente");
             cleaned = Regex.Replace(cleaned, @"(?i)efectodesonido", " Efecto Sonido");
 
-            cleaned = Regex.Replace(cleaned, @"\[[A-Za-z0-9_-]{8,}\]", "");
-            cleaned = Regex.Replace(cleaned, @"(?i)(EFECTO DE SONIDO|SOUND EFFECT|SIN COPYRIGHT|NO COPYRIGHT|MP3|WAV)", "");
-            cleaned = Regex.Replace(cleaned, @"^\d+[\s\-_]*", "");
             cleaned = Regex.Replace(cleaned, @"[\-_]+", " ");
             cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
 
@@ -147,7 +152,7 @@ namespace EternAudio
         public static int PerformAutoOrganization(string rootDirectoryPath, Action<int, int, string> onProgress = null)
         {
             if (!Directory.Exists(rootDirectoryPath)) return 0;
-            int organizedCount = 0;
+            int actualMovedOrRenamedCount = 0;
 
             string fbxDir = Path.Combine(rootDirectoryPath, "Fbx");
             string musicDir = Path.Combine(rootDirectoryPath, "Musica");
@@ -155,7 +160,6 @@ namespace EternAudio
             if (!Directory.Exists(fbxDir)) Directory.CreateDirectory(fbxDir);
             if (!Directory.Exists(musicDir)) Directory.CreateDirectory(musicDir);
 
-            // Subdirectories
             string memesDir = Path.Combine(fbxDir, "Cartoon-Animados");
             string animeDir = Path.Combine(fbxDir, "Anime-Manga");
             string techDir = Path.Combine(fbxDir, "Internet-Ordenadores");
@@ -199,7 +203,6 @@ namespace EternAudio
                                             currentDirName.Equals("PorClasificar", StringComparison.OrdinalIgnoreCase) ||
                                             currentDirName.Equals("Por_Clasificar", StringComparison.OrdinalIgnoreCase) ||
                                             currentDirName.Equals("Efectos Frecuentes", StringComparison.OrdinalIgnoreCase));
-                    bool needsRename = !currentFileName.Equals(targetFileName, StringComparison.OrdinalIgnoreCase);
 
                     string targetFolder = currentDir;
                     if (isLooseFile || inGenericFolder)
@@ -224,9 +227,10 @@ namespace EternAudio
 
                     string targetFilePath = Path.Combine(targetFolder, targetFileName);
 
-                    if (needsRename || !targetFolder.Equals(currentDir, StringComparison.OrdinalIgnoreCase))
+                    // Strictly check if the target location or filename is DIFFERENT from source
+                    if (!targetFilePath.Equals(file, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (File.Exists(targetFilePath) && !targetFilePath.Equals(file, StringComparison.OrdinalIgnoreCase))
+                        if (File.Exists(targetFilePath))
                         {
                             int counter = 1;
                             while (File.Exists(targetFilePath))
@@ -236,17 +240,43 @@ namespace EternAudio
                             }
                         }
 
-                        if (!targetFilePath.Equals(file, StringComparison.OrdinalIgnoreCase))
-                        {
-                            File.Move(file, targetFilePath);
-                            organizedCount++;
-                        }
+                        File.Move(file, targetFilePath);
+                        actualMovedOrRenamedCount++;
                     }
                 }
                 catch { }
             }
 
-            return organizedCount;
+            return actualMovedOrRenamedCount;
+        }
+
+        public static string MoveFileToFolder(string sourceFilePath, string targetDirectoryPath)
+        {
+            if (!File.Exists(sourceFilePath) || !Directory.Exists(targetDirectoryPath)) return sourceFilePath;
+            try
+            {
+                string ext = Path.GetExtension(sourceFilePath);
+                string cleanName = FormatCleanSpanishFileName(sourceFilePath) + ext;
+                string targetFilePath = Path.Combine(targetDirectoryPath, cleanName);
+
+                if (targetFilePath.Equals(sourceFilePath, StringComparison.OrdinalIgnoreCase))
+                    return sourceFilePath;
+
+                int counter = 1;
+                string nameNoExt = Path.GetFileNameWithoutExtension(cleanName);
+                while (File.Exists(targetFilePath))
+                {
+                    targetFilePath = Path.Combine(targetDirectoryPath, nameNoExt + "_" + counter.ToString() + ext);
+                    counter++;
+                }
+
+                File.Move(sourceFilePath, targetFilePath);
+                return targetFilePath;
+            }
+            catch
+            {
+                return sourceFilePath;
+            }
         }
 
         private static void CollectAudioFilesRecursive(string path, List<string> list)
