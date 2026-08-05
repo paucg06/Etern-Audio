@@ -17,11 +17,13 @@ namespace EternAudio
         [DataMember] public string[] Tags { get; set; }
         [DataMember] public string Category { get; set; }
         [DataMember] public string SubCategory { get; set; }
+        [DataMember] public string SuggestedFolder { get; set; }
+        [DataMember] public double ConfidenceScore { get; set; } // 0.0 to 1.0 (e.g. 0.85 = 85%)
         [DataMember] public long FileSizeBytes { get; set; }
         [DataMember] public double DurationSeconds { get; set; }
         [DataMember] public bool IsShortSfx { get; set; } // true if < 30s, false if >= 30s
-        [DataMember] public bool NeedsReview { get; set; } // true if organization was uncertain
-        [DataMember] public double MatchScore { get; set; } // 1.0 to 10.0 relevance score
+        [DataMember] public bool NeedsReview { get; set; } // true if organization was uncertain (< 80%)
+        [DataMember] public double MatchScore { get; set; } // 1.0 to 10.0 search relevance score
         [DataMember] public string LibraryId { get; set; }
         [DataMember] public bool IsFavorite { get; set; }
         [DataMember] public int PlayCount { get; set; }
@@ -33,6 +35,8 @@ namespace EternAudio
             Tags = new string[0];
             Category = "General";
             SubCategory = "General";
+            SuggestedFolder = "";
+            ConfidenceScore = 1.0;
             NeedsReview = false;
             MatchScore = 10.0;
             DateAddedTicks = DateTime.Now.Ticks;
