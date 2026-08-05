@@ -37,6 +37,15 @@ namespace EternAudio
                     index[tok].Add(f.Id);
                 }
 
+                if (!string.IsNullOrEmpty(f.OriginalRawName))
+                {
+                    foreach (var tok in TagEngine.TokenizeFilename(f.OriginalRawName))
+                    {
+                        if (!index.ContainsKey(tok)) index[tok] = new HashSet<string>();
+                        index[tok].Add(f.Id);
+                    }
+                }
+
                 string catKey = TagEngine.NormalizeText(f.Category);
                 if (!index.ContainsKey(catKey)) index[catKey] = new HashSet<string>();
                 index[catKey].Add(f.Id);
@@ -69,8 +78,8 @@ namespace EternAudio
             }
             else
             {
-                string[] expanded = TagEngine.ExpandQuery(query);
                 string rawNorm = TagEngine.NormalizeText(query.Trim());
+                string[] expanded = TagEngine.ExpandQuery(rawNorm);
 
                 var scores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 
@@ -78,15 +87,17 @@ namespace EternAudio
                 {
                     if (string.IsNullOrEmpty(term)) continue;
 
+                    // Direct index hit
                     if (index.ContainsKey(term))
                     {
                         foreach (var id in index[term])
                         {
                             if (!scores.ContainsKey(id)) scores[id] = 0;
-                            scores[id] += 8.0;
+                            scores[id] += 10.0;
                         }
                     }
 
+                    // Partial / Substring hits across index
                     foreach (var kvp in index)
                     {
                         if (kvp.Key.Length < 2) continue;
@@ -98,6 +109,8 @@ namespace EternAudio
                         else if (kvp.Key.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                  term.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)
                             bonus = 5.5;
+                        else if (kvp.Key.Length >= 4 && term.Length >= 4 && TagEngine.LevenshteinDistance(kvp.Key, term) <= 2)
+                            bonus = 4.0;
 
                         if (bonus > 0)
                         {
@@ -110,28 +123,42 @@ namespace EternAudio
                     }
                 }
 
-                // Substring & DisplayName bonus
+                // Title & FilePath Vector Bonus
                 foreach (var f in fileById.Values)
                 {
                     string fnNorm = TagEngine.NormalizeText(f.FileName);
                     string dnNorm = TagEngine.NormalizeText(f.DisplayName);
+                    string rawNormFile = TagEngine.NormalizeText(f.OriginalRawName ?? "");
                     string fpNorm = TagEngine.NormalizeText(f.FilePath);
 
+                    // Exact or substring match in DisplayName / FileName
                     if (dnNorm.Equals(rawNorm, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
+                        scores[f.Id] += 20.0;
+                    }
+                    else if (fnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                             dnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                             rawNormFile.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
                         scores[f.Id] += 15.0;
                     }
-                    else if (fnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                             dnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
-                        scores[f.Id] += 12.0;
-                    }
                     else if (fpNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
-                        scores[f.Id] += 6.0;
+                        scores[f.Id] += 8.0;
+                    }
+
+                    // Check fuzzy distance against DisplayName words
+                    var words = dnNorm.Split(new char[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var w in words)
+                    {
+                        if (w.Length >= 4 && rawNorm.Length >= 4 && TagEngine.LevenshteinDistance(w, rawNorm) <= 2)
+                        {
+                            if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
+                            scores[f.Id] += 7.0;
+                        }
                     }
                 }
 

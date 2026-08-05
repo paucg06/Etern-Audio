@@ -18,11 +18,27 @@ namespace EternAudio
             return false;
         }
 
-        // Comprehensive bilingual (ES + EN) semantic & synonym dictionary
-        private static readonly Dictionary<string, string[]> SynonymMap =
+        // ─── Comprehensive Multi-Domain Semantic Concept Graph ─────────────────
+        private static readonly Dictionary<string, string[]> ConceptGraph =
             new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            // Animals
+            // Computing, Mouse & Interface
+            { "raton",        new[] {"raton","mouse","clic","click","boton","button","teclado","keyboard","ui","interfaz","pc","ordenador","roedor","queso","presionar","select"} },
+            { "mouse",        new[] {"mouse","raton","clic","click","boton","button","teclado","keyboard","ui","interfaz","pc","ordenador","roedor","queso","select"} },
+            { "click",        new[] {"click","clic","mouse","raton","boton","button","select","press","ui","interfaz","teclado","keyboard","pulsar"} },
+            { "clic",         new[] {"clic","click","mouse","raton","boton","button","select","press","ui","interfaz","teclado","keyboard","pulsar"} },
+            { "teclado",      new[] {"teclado","keyboard","typing","tipear","click","clic","boton","iphone","pc","escritura","persona_escribiendo"} },
+            { "keyboard",     new[] {"keyboard","teclado","typing","tipear","click","clic","boton","pc"} },
+
+            // House, Domestic & Buildings
+            { "casa",         new[] {"casa","house","home","hogar","puerta","door","ventana","window","cocina","habitacion","pasos","madera","llave","lock","reloj","ambiente","edificio","domestico","pestillo"} },
+            { "house",        new[] {"house","casa","home","hogar","puerta","door","ventana","window","room","key","lock","domestic"} },
+            { "home",         new[] {"home","house","casa","hogar","puerta","door","room","domestic"} },
+            { "puerta",       new[] {"puerta","door","gate","pestillo","lock","llave","porton","madera","cerrar","abrir","golpe_puerta","casa","house"} },
+            { "door",         new[] {"door","puerta","gate","lock","key","wood","close","open","house","home"} },
+            { "ventana",      new[] {"ventana","window","cristal","glass","abrir","casa","house"} },
+
+            // Animals & Farm
             { "gallo",        new[] {"gallo","pollo","rooster","chicken","kikiriki","kikirikigallo","granja","ave","pajaro","farm","cock","bird","corral"} },
             { "pollo",        new[] {"pollo","gallo","chicken","rooster","kikiriki","kikirikigallo","granja","ave","pajaro","farm","bird"} },
             { "kikiriki",     new[] {"kikiriki","kikirikigallo","gallo","pollo","rooster","chicken","granja","ave"} },
@@ -31,65 +47,38 @@ namespace EternAudio
             { "gato",         new[] {"gato","cat","meow","maullido","miau","kitten","felino","purr","ronroneo"} },
             { "cat",          new[] {"cat","gato","meow","maullido","miau","kitten","felino"} },
             { "mono",         new[] {"mono","monkey","ape","chimpance","gorila","selva","jungle","primate"} },
-            { "monkey",       new[] {"monkey","mono","ape","chimpance","gorila","selva","jungle"} },
-            { "vaca",         new[] {"vaca","cow","muuu","moo","granja","farm","leche"} },
-            { "caballo",      new[] {"caballo","horse","relincho","neigh","trote","gallop","granja"} },
-            { "oveja",        new[] {"oveja","sheep","beee","bleat","granja","farm"} },
-            { "pajaro",       new[] {"pajaro","bird","chirp","prio","canto","fly","volar","ave"} },
 
-            // Culture, Countries, Anime, Memes & Gaming
+            // Culture, Anime, Japan & Cartoons
             { "japon",        new[] {"japon","japan","anime","manga","otaku","tokyo","ninja","samurai","japones","japanese","asian","oriental","goku","doraemon","kirby","nintendo","ching_cheng"} },
             { "japan",        new[] {"japan","japon","anime","manga","otaku","tokyo","ninja","samurai","japones","japanese","asian","oriental","goku","doraemon","kirby","nintendo"} },
             { "anime",        new[] {"anime","manga","japon","japones","japanese","cartoon","dibujos","animados","otaku","goku","doraemon","kirby","naruto","dragonball","one_piece","hora_hora","samurai","ninja"} },
             { "cartoon",      new[] {"cartoon","anime","dibujos","animados","comedia","funny","comedy","silly","humor","meme","kirby","doraemon","looney","animacion"} },
-            { "dibujos",      new[] {"dibujos","cartoon","animados","anime","comedia","funny","comedy","humor","meme","kirby","doraemon"} },
             { "meme",         new[] {"meme","comedia","comedy","funny","funny_sound","viral","humor","gracioso","risas","redes","tiktok","youtube","goku","kirby","doraemon","ching_cheng","fail"} },
-            { "comedia",      new[] {"comedia","comedy","funny","meme","humor","gracioso","cartoon","dibujos","risas","tonto"} },
             { "kirby",        new[] {"kirby","cartoon","funny","game","nintendo","comedia","meme","dibujos","rosa","super_smash","nintendo_switch"} },
             { "goku",         new[] {"goku","dragonball","anime","drama","meme","comedy","saiyan","goku_meme","kamehameha","japon"} },
-            { "doraemon",     new[] {"doraemon","anime","cartoon","funny","dibujos","comedia","gato_cosmico","nobita","japon"} },
 
-            // Actions & Hits
+            // Combat & Hits
             { "golpe",        new[] {"golpe","hit","punch","impact","impacto","crash","smash","puñetazo","slap","puño","seco","puñetazo_cartoon","golpe_seco","choque"} },
             { "puñetazo",     new[] {"puñetazo","punch","hit","golpe","impacto","boxeo","fight","pelea","puño","puñetazo_cartoon"} },
             { "hit",          new[] {"hit","golpe","punch","impact","impacto","smash","slap","puñetazo","strike"} },
             { "impacto",      new[] {"impacto","impact","hit","strike","golpe","choque","crash","smash","caida","suelo"} },
-            { "impact",       new[] {"impact","impacto","hit","strike","crash","smash","bang","golpe","choque","thud"} },
             { "romperse",     new[] {"romperse","break","bone","hueso","crack","fracture","romper","crujido","ruptura","fractura"} },
             { "bone",         new[] {"bone","hueso","break","crack","fracture","romper","crujido","romperse","cuerpo"} },
             { "hueso",        new[] {"hueso","bone","break","crack","fracture","romper","crujido","romperse","cuerpo"} },
-            { "caida",        new[] {"caida","fall","falling","drop","suelo","cuerpo","impacto","dibujos","cartoon"} },
-            { "fall",         new[] {"fall","falling","caida","drop","suelo","cuerpo","impacto"} },
 
-            // Explosions & Fire
-            { "explosion",    new[] {"explosion","explosión","boom","blast","bang","detonate","detonation","kaboom","burst","bomba","estallido","bum","blowup","fuego","fire"} },
-            { "bomba",        new[] {"bomba","bomb","explosion","blast","bang","estallido","explosión","granada","nuke","dynamite","dinamita"} },
-
-            // UI & Tech
-            { "teclado",      new[] {"teclado","keyboard","typing","tipear","click","clic","boton","iphone","pc","escritura","persona_escribiendo"} },
-            { "keyboard",     new[] {"keyboard","teclado","typing","tipear","click","clic","boton","pc"} },
-            { "click",        new[] {"click","clic","button","boton","select","press","mouse","ui","interfaz"} },
-            { "clic",         new[] {"clic","click","button","boton","select","press","ui"} },
-            { "boton",        new[] {"boton","button","click","clic","select","respuesta","ui","presionar"} },
-            { "error",        new[] {"error","fail","wrong","buzz","incorrect","fallo","equivocacion","incorrecto","alerta","warning"} },
-            { "whoosh",       new[] {"whoosh","swipe","fast","speed","swoosh","transition","rapido","veloz","transicion","silbido","aire"} },
-
-            // Voice & People
-            { "grito",        new[] {"grito","scream","yell","shout","cry","gritar","chillar","terror","horror","miedo","ayuda","ahhh"} },
-            { "voz",          new[] {"voz","voice","human","speak","talk","humano","hablar","habla","grito","frase","persona"} },
-            { "frase",        new[] {"frase","voice","speech","voz","habla","humano","meme","grito","dialogo","paralizado"} },
-
-            // Nature & Ambience
-            { "viento",       new[] {"viento","wind","breeze","gust","brisa","rafaga","tormenta","storm","aire"} },
+            // Water & Nature
+            { "agua",         new[] {"agua","water","lluvia","rain","rio","river","mar","sea","splash","chubasco","gota","drizzle","fluido"} },
+            { "water",        new[] {"water","agua","rain","lluvia","sea","river","splash","drizzle"} },
             { "lluvia",       new[] {"lluvia","rain","drizzle","shower","agua","chubasco","tormenta","storm","water"} },
-            { "paso",         new[] {"paso","footstep","step","walk","feet","caminar","pie","steps","andar","correr"} },
+            { "viento",       new[] {"viento","wind","breeze","gust","brisa","rafaga","tormenta","storm","aire"} },
 
-            // Weapons
-            { "arma",         new[] {"arma","gun","weapon","shoot","fire","pistola","fusil","disparo","bala","tiro","espada"} },
-            { "espada",       new[] {"espada","sword","blade","slash","slice","clang","hoja","tajo","corte","metal"} },
+            // Vehicles
+            { "coche",        new[] {"coche","auto","car","vehiculo","motor","engine","rueda","freno","claxon","trafico"} },
+            { "car",          new[] {"car","coche","auto","vehicle","engine","motor","drive"} },
 
-            // Music
-            { "musica",       new[] {"musica","music","musical","melody","melodia","cancion","ritmo","loop","pista","ambiente","8bit"} }
+            // Voice & Scream
+            { "grito",        new[] {"grito","scream","yell","shout","cry","gritar","chillar","terror","horror","miedo","ayuda","ahhh"} },
+            { "voz",          new[] {"voz","voice","human","speak","talk","humano","hablar","habla","grito","frase","persona"} }
         };
 
         private static readonly Dictionary<string, string> CategoryMap =
@@ -102,10 +91,10 @@ namespace EternAudio
             {"footstep","Pasos"},{"paso","Pasos"},{"caminar","Pasos"},{"correr","Pasos"},
             {"car","Vehículo"},{"coche","Vehículo"},{"engine","Vehículo"},{"motor","Vehículo"},
             {"gun","Arma"},{"arma","Arma"},{"disparo","Arma"},{"espada","Arma"},
-            {"click","Interfaz"},{"clic","Interfaz"},{"boton","Interfaz"},{"error","Interfaz"},{"incorrecto","Interfaz"},{"whoosh","Whoosh"},{"teclado","Internet-Ordenadores"},{"iphone","Internet-Ordenadores"},
+            {"click","Interfaz"},{"clic","Interfaz"},{"boton","Interfaz"},{"error","Interfaz"},{"incorrecto","Interfaz"},{"whoosh","Whoosh"},{"teclado","Internet-Ordenadores"},{"iphone","Internet-Ordenadores"},{"raton","Internet-Ordenadores"},{"mouse","Internet-Ordenadores"},
             {"voice","Frases"},{"voz","Frases"},{"grito","Frases"},{"frase","Frases"},{"sniff","Frases"},{"esnifar","Frases"},
             {"comedy","Cartoon-Animados"},{"comedia","Cartoon-Animados"},{"cartoon","Cartoon-Animados"},{"kirby","Cartoon-Animados"},{"goku","Cartoon-Animados"},{"doraemon","Cartoon-Animados"},{"meme","Cartoon-Animados"},{"japon","Cartoon-Animados"},{"anime","Cartoon-Animados"},
-            {"yunke","Objetos"},{"metal","Objetos"},{"madera","Objetos"},{"motosierra","Objetos"},
+            {"yunke","Objetos"},{"metal","Objetos"},{"madera","Objetos"},{"motosierra","Objetos"},{"puerta","Objetos"},{"ventana","Objetos"},{"casa","Objetos"},
             {"music","Música"},{"musica","Música"}
         };
 
@@ -158,11 +147,11 @@ namespace EternAudio
 
             foreach (var token in tokens)
             {
-                if (SynonymMap.ContainsKey(token))
-                    foreach (var syn in SynonymMap[token])
+                if (ConceptGraph.ContainsKey(token))
+                    foreach (var syn in ConceptGraph[token])
                         tagSet.Add(syn);
 
-                foreach (var kvp in SynonymMap)
+                foreach (var kvp in ConceptGraph)
                 {
                     if (kvp.Key.Length >= 3 && token.Length >= 3 &&
                         (kvp.Key.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -224,6 +213,7 @@ namespace EternAudio
                 FilePath = filePath,
                 FileName = cleanFileName,
                 DisplayName = displayName,
+                OriginalRawName = rawFilename,
                 Tags = tagList.ToArray(),
                 Category = category,
                 SubCategory = subCategory,
@@ -245,13 +235,13 @@ namespace EternAudio
             foreach (var word in words)
             {
                 expanded.Add(word);
-                if (SynonymMap.ContainsKey(word))
+                if (ConceptGraph.ContainsKey(word))
                 {
-                    foreach (var syn in SynonymMap[word])
+                    foreach (var syn in ConceptGraph[word])
                         expanded.Add(NormalizeText(syn));
                 }
 
-                foreach (var kvp in SynonymMap)
+                foreach (var kvp in ConceptGraph)
                 {
                     if (kvp.Key.Length >= 3 && word.Length >= 3 &&
                         (kvp.Key.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -264,6 +254,32 @@ namespace EternAudio
             }
 
             return new List<string>(expanded).ToArray();
+        }
+
+        // Fuzzy Levenshtein Distance for typo matching (e.g. raton vs mouse / ratonsito / escasa vs casa)
+        public static int LevenshteinDistance(string s, string t)
+        {
+            if (string.IsNullOrEmpty(s)) return string.IsNullOrEmpty(t) ? 0 : t.Length;
+            if (string.IsNullOrEmpty(t)) return s.Length;
+
+            int n = s.Length;
+            int m = t.Length;
+            int[,] d = new int[n + 1, m + 1];
+
+            for (int i = 0; i <= n; d[i, 0] = i++) { }
+            for (int j = 0; j <= m; d[0, j] = j++) { }
+
+            for (int i = 1; i <= n; i++)
+            {
+                for (int j = 1; j <= m; j++)
+                {
+                    int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+                    d[i, j] = Math.Min(
+                        Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                        d[i - 1, j - 1] + cost);
+                }
+            }
+            return d[n, m];
         }
 
         public static string FormatFileSize(long bytes)

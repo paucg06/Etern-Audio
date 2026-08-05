@@ -13,6 +13,7 @@ namespace EternAudio
         [DataMember] public string FilePath { get; set; }
         [DataMember] public string FileName { get; set; }
         [DataMember] public string DisplayName { get; set; }
+        [DataMember] public string OriginalRawName { get; set; }
         [DataMember] public string[] Tags { get; set; }
         [DataMember] public string Category { get; set; }
         [DataMember] public string SubCategory { get; set; }
