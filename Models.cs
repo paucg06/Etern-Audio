@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
+#if !NETCOREAPP && !NET8_0_OR_GREATER
 using System.Reflection;
 
 [assembly: AssemblyTitle("Etern Audio")]
@@ -12,6 +13,7 @@ using System.Reflection;
 [assembly: AssemblyCopyright("Copyright © Etern Studio 2026")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+#endif
 
 namespace EternAudio
 {
