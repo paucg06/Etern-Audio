@@ -99,7 +99,7 @@ namespace EternAudio
 
         public WpfMainWindow()
         {
-            Width = 1420; Height = 880;
+            Width = 1440; Height = 890;
             MinWidth = 980; MinHeight = 650;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -470,8 +470,14 @@ namespace EternAudio
             var tableHeader = CreateSpotifyTableHeader();
             Grid.SetRow(tableHeader, 2); grid.Children.Add(tableHeader);
 
-            // Spotify-style Track Cards List View
-            lstFiles = new ListView { Background = Brushes.Transparent, BorderThickness = new Thickness(0), SelectionMode = SelectionMode.Single };
+            // Spotify-style Track Cards List View with Full-Width Stretch!
+            lstFiles = new ListView
+            {
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                SelectionMode = SelectionMode.Single,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch
+            };
             lstFiles.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             lstFiles.SelectionChanged += LstFiles_SelectionChanged;
             lstFiles.MouseDoubleClick += delegate(object s, MouseButtonEventArgs e) { PlaySelectedFile(); };
@@ -483,6 +489,7 @@ namespace EternAudio
             itemStyle.Setters.Add(new Setter(ListViewItem.BorderThicknessProperty, new Thickness(0)));
             itemStyle.Setters.Add(new Setter(ListViewItem.MarginProperty, new Thickness(0, 1, 0, 1)));
             itemStyle.Setters.Add(new Setter(ListViewItem.PaddingProperty, new Thickness(0)));
+            itemStyle.Setters.Add(new Setter(ListViewItem.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch));
             var hoverT = new Trigger { Property = ListViewItem.IsMouseOverProperty, Value = true };
             hoverT.Setters.Add(new Setter(ListViewItem.BackgroundProperty, Br(CARDHOVER)));
             var selT = new Trigger { Property = ListViewItem.IsSelectedProperty, Value = true };
@@ -490,7 +497,7 @@ namespace EternAudio
             itemStyle.Triggers.Add(hoverT); itemStyle.Triggers.Add(selT);
             lstFiles.ItemContainerStyle = itemStyle;
 
-            var listBorder = new Border { Child = new ScrollViewer { Content = lstFiles, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }, Background = Br(BG) };
+            var listBorder = new Border { Child = new ScrollViewer { Content = lstFiles, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled }, Background = Br(BG) };
             Grid.SetRow(listBorder, 3); grid.Children.Add(listBorder);
 
             var divBorder = new Border { Height = 1, Background = Br(BORDER_C) };
@@ -504,14 +511,14 @@ namespace EternAudio
 
         Border CreateSpotifyTableHeader()
         {
-            var border = new Border { Background = Br(SIDEBAR), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 0, 0, 1), Padding = new Thickness(14, 0, 14, 0) };
-            var grid = new Grid();
+            var border = new Border { Background = Br(SIDEBAR), BorderBrush = Br(BORDER_C), BorderThickness = new Thickness(0, 0, 0, 1), Padding = new Thickness(14, 0, 14, 0), HorizontalAlignment = HorizontalAlignment.Stretch };
+            var grid = new Grid { HorizontalAlignment = HorizontalAlignment.Stretch };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });  // #
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(46) });  // Icon
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // TÍTULO
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) }); // CARPETA / CATEGORÍA
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) }); // CARPETA / CATEGORÍA
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // TAMAÑO
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) }); // COINCIDENCIA
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) }); // COINCIDENCIA
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });  // DURA
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // ACCIONES
 
@@ -574,7 +581,7 @@ namespace EternAudio
             txtSearch.GotFocus  += delegate(object s, RoutedEventArgs e) { border.BorderBrush = Br(ACCENT); };
             txtSearch.LostFocus += delegate(object s, RoutedEventArgs e) { border.BorderBrush = Br(BORDER_C); };
 
-            var wm = new TextBlock { Text = "Buscar sonidos por nombre o tag... (breaking, hueso, meme, risa, golpe...)", Foreground = Br(TEXTDIM), FontSize = 14, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
+            var wm = new TextBlock { Text = "Buscar en todos los audios... (gallo, pollo, japón, anime, golpear...)", Foreground = Br(TEXTDIM), FontSize = 14, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
             txtSearch.TextChanged += delegate(object s, TextChangedEventArgs e) { wm.Visibility = string.IsNullOrEmpty(txtSearch.Text) ? Visibility.Visible : Visibility.Collapsed; };
             var ig = new Grid(); ig.Children.Add(wm); ig.Children.Add(txtSearch);
             Grid.SetColumn(ig, 1); grid.Children.Add(ig);
@@ -762,7 +769,7 @@ namespace EternAudio
             return btn;
         }
 
-        // ─── File List (Exact Spotify Table Row Layout) ──────────────────────────
+        // ─── File List (Exact Spotify Table Row Layout - Full Width Stretch) ───
 
         DispatcherTimer searchTimer;
         void SearchDebounce() { if (searchTimer != null) searchTimer.Stop(); searchTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(180) }; searchTimer.Tick += delegate(object s, EventArgs e) { searchTimer.Stop(); RefreshFileList(); }; searchTimer.Start(); }
@@ -777,7 +784,7 @@ namespace EternAudio
 
             foreach (var f in filteredFiles)
             {
-                var item = new ListViewItem { Tag = f };
+                var item = new ListViewItem { Tag = f, HorizontalContentAlignment = HorizontalAlignment.Stretch };
                 item.Content = BuildSpotifyRowItem(f, trackNumber, isSearching);
                 lstFiles.Items.Add(item);
                 trackNumber++;
@@ -788,16 +795,24 @@ namespace EternAudio
 
         UIElement BuildSpotifyRowItem(SfxFile f, int indexNumber, bool isSearching)
         {
-            var border = new Border { Padding = new Thickness(10, 8, 10, 8), Background = Br(CARD), CornerRadius = new CornerRadius(6), Margin = new Thickness(0, 1, 0, 1) };
-            var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });  // # Index Number
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(46) });  // Icon Artwork
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Track Title + Subtitle
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) }); // Folder / Subfolder
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // File Size
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) }); // Match Score
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });  // Duration
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // Actions
+            var border = new Border
+            {
+                Padding = new Thickness(12, 8, 12, 8),
+                Background = Br(CARD),
+                CornerRadius = new CornerRadius(6),
+                Margin = new Thickness(0, 1, 0, 1),
+                HorizontalAlignment = HorizontalAlignment.Stretch
+            };
+
+            var grid = new Grid { HorizontalAlignment = HorizontalAlignment.Stretch };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });  // 0: # Index Number
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(46) });  // 1: Icon Artwork
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // 2: Track Title + Subtitle
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) }); // 3: Subfolder / Category
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // 4: File Size
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) }); // 5: Match Score
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });  // 6: Duration
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });  // 7: Actions
 
             // Col 0: Index Number
             var numTB = new TextBlock { Text = indexNumber.ToString(), FontSize = 12, Foreground = Br(TEXTDIM), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
@@ -833,13 +848,13 @@ namespace EternAudio
             // Col 5: Match Score (1 to 10)
             if (isSearching)
             {
-                var scoreBorder = new Border { Background = new SolidColorBrush(Color.FromArgb(30, 88, 166, 255)), CornerRadius = new CornerRadius(4), Padding = new Thickness(5, 1, 5, 1), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
+                var scoreBorder = new Border { Background = new SolidColorBrush(Color.FromArgb(30, 88, 166, 255)), CornerRadius = new CornerRadius(4), Padding = new Thickness(6, 2, 6, 2), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
                 scoreBorder.Child = new TextBlock { Text = "⭐ " + f.MatchScore.ToString("F1") + " / 10", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Br(ACCENT) };
                 Grid.SetColumn(scoreBorder, 5); grid.Children.Add(scoreBorder);
             }
             else if (f.NeedsReview)
             {
-                var revBadge = new Border { Background = Br(WARNING_C), CornerRadius = new CornerRadius(4), Padding = new Thickness(5, 1, 5, 1), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
+                var revBadge = new Border { Background = Br(WARNING_C), CornerRadius = new CornerRadius(4), Padding = new Thickness(6, 2, 6, 2), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
                 revBadge.Child = new TextBlock { Text = "⚠️ Revisa", FontSize = 9, FontWeight = FontWeights.Bold, Foreground = Br(BG) };
                 Grid.SetColumn(revBadge, 5); grid.Children.Add(revBadge);
             }

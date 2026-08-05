@@ -41,6 +41,10 @@ namespace EternAudio
                 if (!index.ContainsKey(catKey)) index[catKey] = new HashSet<string>();
                 index[catKey].Add(f.Id);
 
+                string subCatKey = TagEngine.NormalizeText(f.SubCategory);
+                if (!index.ContainsKey(subCatKey)) index[subCatKey] = new HashSet<string>();
+                index[subCatKey].Add(f.Id);
+
                 var dnTokens = f.DisplayName.Split(new char[] { ' ', '-', '_' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var tok in dnTokens)
                 {
@@ -55,8 +59,9 @@ namespace EternAudio
         public List<SfxFile> Search(string query, string categoryFilter, bool favoritesOnly, string folderPathFilter, int lengthFilter = 0)
         {
             IEnumerable<SfxFile> candidates;
+            bool isGlobalSearchQuery = !string.IsNullOrEmpty(query) && !string.IsNullOrEmpty(query.Trim());
 
-            if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(query.Trim()))
+            if (!isGlobalSearchQuery)
             {
                 foreach (var f in fileById.Values)
                     f.MatchScore = 10.0;
@@ -90,8 +95,9 @@ namespace EternAudio
                             bonus = 9.5;
                         else if (kvp.Key.StartsWith(term, StringComparison.OrdinalIgnoreCase))
                             bonus = 7.5;
-                        else if (kvp.Key.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
-                            bonus = 5.0;
+                        else if (kvp.Key.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 term.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)
+                            bonus = 5.5;
 
                         if (bonus > 0)
                         {
@@ -104,25 +110,28 @@ namespace EternAudio
                     }
                 }
 
+                // Substring & DisplayName bonus
                 foreach (var f in fileById.Values)
                 {
                     string fnNorm = TagEngine.NormalizeText(f.FileName);
                     string dnNorm = TagEngine.NormalizeText(f.DisplayName);
+                    string fpNorm = TagEngine.NormalizeText(f.FilePath);
 
                     if (dnNorm.Equals(rawNorm, StringComparison.OrdinalIgnoreCase))
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
                         scores[f.Id] += 15.0;
                     }
-                    else if (fnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (fnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                             dnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
                         scores[f.Id] += 12.0;
                     }
-                    else if (dnNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (fpNorm.IndexOf(rawNorm, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         if (!scores.ContainsKey(f.Id)) scores[f.Id] = 0;
-                        scores[f.Id] += 10.0;
+                        scores[f.Id] += 6.0;
                     }
                 }
 
@@ -163,7 +172,8 @@ namespace EternAudio
                                                f.SubCategory.IndexOf(categoryFilter, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            if (!string.IsNullOrEmpty(folderPathFilter))
+            // Only apply folder filter if user is NOT searching globally
+            if (!isGlobalSearchQuery && !string.IsNullOrEmpty(folderPathFilter))
             {
                 result = result.Where(f => f.FilePath.StartsWith(folderPathFilter, StringComparison.OrdinalIgnoreCase));
             }
@@ -176,7 +186,7 @@ namespace EternAudio
             if (favoritesOnly)
                 result = result.Where(f => f.IsFavorite);
 
-            if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(query.Trim()))
+            if (!isGlobalSearchQuery)
                 result = result.OrderBy(f => f.DisplayName);
 
             return result.ToList();

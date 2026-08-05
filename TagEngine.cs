@@ -18,65 +18,95 @@ namespace EternAudio
             return false;
         }
 
+        // Comprehensive bilingual (ES + EN) semantic & synonym dictionary
         private static readonly Dictionary<string, string[]> SynonymMap =
             new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            { "explosion",    new[] {"explosion","explosión","boom","blast","bang","detonate","detonation","kaboom","burst","bomba","estallido","bum","blowup","detonacion","fuego","fire"} },
+            // Animals
+            { "gallo",        new[] {"gallo","pollo","rooster","chicken","kikiriki","kikirikigallo","granja","ave","pajaro","farm","cock","bird","corral"} },
+            { "pollo",        new[] {"pollo","gallo","chicken","rooster","kikiriki","kikirikigallo","granja","ave","pajaro","farm","bird"} },
+            { "kikiriki",     new[] {"kikiriki","kikirikigallo","gallo","pollo","rooster","chicken","granja","ave"} },
+            { "perro",        new[] {"perro","dog","bark","ladridos","ladrido","puppy","hound","canino","mascota","can"} },
+            { "dog",          new[] {"dog","perro","bark","ladrido","puppy","hound","canino"} },
+            { "gato",         new[] {"gato","cat","meow","maullido","miau","kitten","felino","purr","ronroneo"} },
+            { "cat",          new[] {"cat","gato","meow","maullido","miau","kitten","felino"} },
+            { "mono",         new[] {"mono","monkey","ape","chimpance","gorila","selva","jungle","primate"} },
+            { "monkey",       new[] {"monkey","mono","ape","chimpance","gorila","selva","jungle"} },
+            { "vaca",         new[] {"vaca","cow","muuu","moo","granja","farm","leche"} },
+            { "caballo",      new[] {"caballo","horse","relincho","neigh","trote","gallop","granja"} },
+            { "oveja",        new[] {"oveja","sheep","beee","bleat","granja","farm"} },
+            { "pajaro",       new[] {"pajaro","bird","chirp","prio","canto","fly","volar","ave"} },
+
+            // Culture, Countries, Anime, Memes & Gaming
+            { "japon",        new[] {"japon","japan","anime","manga","otaku","tokyo","ninja","samurai","japones","japanese","asian","oriental","goku","doraemon","kirby","nintendo","ching_cheng"} },
+            { "japan",        new[] {"japan","japon","anime","manga","otaku","tokyo","ninja","samurai","japones","japanese","asian","oriental","goku","doraemon","kirby","nintendo"} },
+            { "anime",        new[] {"anime","manga","japon","japones","japanese","cartoon","dibujos","animados","otaku","goku","doraemon","kirby","naruto","dragonball","one_piece","hora_hora","samurai","ninja"} },
+            { "cartoon",      new[] {"cartoon","anime","dibujos","animados","comedia","funny","comedy","silly","humor","meme","kirby","doraemon","looney","animacion"} },
+            { "dibujos",      new[] {"dibujos","cartoon","animados","anime","comedia","funny","comedy","humor","meme","kirby","doraemon"} },
+            { "meme",         new[] {"meme","comedia","comedy","funny","funny_sound","viral","humor","gracioso","risas","redes","tiktok","youtube","goku","kirby","doraemon","ching_cheng","fail"} },
+            { "comedia",      new[] {"comedia","comedy","funny","meme","humor","gracioso","cartoon","dibujos","risas","tonto"} },
+            { "kirby",        new[] {"kirby","cartoon","funny","game","nintendo","comedia","meme","dibujos","rosa","super_smash","nintendo_switch"} },
+            { "goku",         new[] {"goku","dragonball","anime","drama","meme","comedy","saiyan","goku_meme","kamehameha","japon"} },
+            { "doraemon",     new[] {"doraemon","anime","cartoon","funny","dibujos","comedia","gato_cosmico","nobita","japon"} },
+
+            // Actions & Hits
+            { "golpe",        new[] {"golpe","hit","punch","impact","impacto","crash","smash","puñetazo","slap","puño","seco","puñetazo_cartoon","golpe_seco","choque"} },
+            { "puñetazo",     new[] {"puñetazo","punch","hit","golpe","impacto","boxeo","fight","pelea","puño","puñetazo_cartoon"} },
+            { "hit",          new[] {"hit","golpe","punch","impact","impacto","smash","slap","puñetazo","strike"} },
+            { "impacto",      new[] {"impacto","impact","hit","strike","golpe","choque","crash","smash","caida","suelo"} },
+            { "impact",       new[] {"impact","impacto","hit","strike","crash","smash","bang","golpe","choque","thud"} },
+            { "romperse",     new[] {"romperse","break","bone","hueso","crack","fracture","romper","crujido","ruptura","fractura"} },
+            { "bone",         new[] {"bone","hueso","break","crack","fracture","romper","crujido","romperse","cuerpo"} },
+            { "hueso",        new[] {"hueso","bone","break","crack","fracture","romper","crujido","romperse","cuerpo"} },
+            { "caida",        new[] {"caida","fall","falling","drop","suelo","cuerpo","impacto","dibujos","cartoon"} },
+            { "fall",         new[] {"fall","falling","caida","drop","suelo","cuerpo","impacto"} },
+
+            // Explosions & Fire
+            { "explosion",    new[] {"explosion","explosión","boom","blast","bang","detonate","detonation","kaboom","burst","bomba","estallido","bum","blowup","fuego","fire"} },
             { "bomba",        new[] {"bomba","bomb","explosion","blast","bang","estallido","explosión","granada","nuke","dynamite","dinamita"} },
-            { "impact",       new[] {"impact","hit","strike","crash","smash","bang","blow","golpe","impacto","choque","colision","thud","caida","fall"} },
-            { "impacto",      new[] {"impacto","impact","hit","strike","golpe","choque","crash","smash","caida","cuerpo","suelo"} },
-            { "hit",          new[] {"hit","impact","punch","strike","blow","slap","golpe","golpear","impacto","bash","puñetazo"} },
-            { "golpe",        new[] {"golpe","hit","impact","punch","strike","blow","thud","crash","impacto","bash","puñetazo","bop"} },
-            { "bone",         new[] {"bone","hueso","break","crack","fracture","romper","crujido","romperse","cuerpo","body"} },
-            { "hueso",        new[] {"hueso","bone","break","crack","fracture","romper","crujido","romperse","cuerpo","body"} },
-            { "romperse",     new[] {"romperse","break","bone","hueso","crack","fracture","romper","crujido","ruptura"} },
-            { "nature",       new[] {"nature","natural","outdoor","environment","forest","wind","rain","naturaleza","ambiente","bosque","viento","lluvia","selva","arbol"} },
-            { "viento",       new[] {"viento","wind","breeze","gust","brisa","rafaga","tormenta","storm","aire"} },
-            { "rain",         new[] {"rain","drizzle","shower","storm","water","lluvia","chubasco","aguacero","agua","tormenta"} },
-            { "lluvia",       new[] {"lluvia","rain","drizzle","shower","agua","chubasco","tormenta","storm","water"} },
-            { "footstep",     new[] {"footstep","step","walk","run","feet","foot","paso","caminar","correr","pie","steps","walking"} },
-            { "paso",         new[] {"paso","footstep","step","walk","feet","caminar","pie","steps","andar","correr"} },
-            { "gun",          new[] {"gun","shoot","fire","weapon","pistol","rifle","shot","arma","disparo","pistola","fusil","bala","tiro"} },
-            { "arma",         new[] {"arma","gun","weapon","shoot","fire","pistola","fusil","disparo","bala","tiro","espada"} },
-            { "disparo",      new[] {"disparo","shoot","shot","gun","fire","arma","bala","pistola","fusil","tiro","shotgun"} },
-            { "sword",        new[] {"sword","blade","slash","slice","clang","espada","hoja","tajo","corte","metal","arma"} },
-            { "click",        new[] {"click","button","select","press","mouse","clic","boton","seleccionar","pulsar","interfaz","ui"} },
-            { "clic",         new[] {"clic","click","button","select","press","boton","seleccionar","pulsar","ui"} },
-            { "boton",        new[] {"boton","button","click","select","clic","respuesta","ui","interfaz","presionar"} },
-            { "error",        new[] {"error","fail","wrong","buzz","incorrect","fallo","equivocacion","incorrecto","respuesta","alerta","warning"} },
-            { "incorrecto",   new[] {"incorrecto","error","fail","wrong","fallo","respuesta","boton","fail_sound","malo"} },
-            { "whoosh",       new[] {"whoosh","swipe","fast","speed","swoosh","transition","rapido","veloz","transicion","silbido","aire","pasa"} },
-            { "voice",        new[] {"voice","human","speak","talk","vocal","voz","humano","hablar","habla","grito","frase"} },
+
+            // UI & Tech
+            { "teclado",      new[] {"teclado","keyboard","typing","tipear","click","clic","boton","iphone","pc","escritura","persona_escribiendo"} },
+            { "keyboard",     new[] {"keyboard","teclado","typing","tipear","click","clic","boton","pc"} },
+            { "click",        new[] {"click","clic","button","boton","select","press","mouse","ui","interfaz"} },
+            { "clic",         new[] {"clic","click","button","boton","select","press","ui"} },
+            { "boton",        new[] {"boton","button","click","clic","select","respuesta","ui","presionar"} },
+            { "error",        new[] {"error","fail","wrong","buzz","incorrect","fallo","equivocacion","incorrecto","alerta","warning"} },
+            { "whoosh",       new[] {"whoosh","swipe","fast","speed","swoosh","transition","rapido","veloz","transicion","silbido","aire"} },
+
+            // Voice & People
+            { "grito",        new[] {"grito","scream","yell","shout","cry","gritar","chillar","terror","horror","miedo","ayuda","ahhh"} },
             { "voz",          new[] {"voz","voice","human","speak","talk","humano","hablar","habla","grito","frase","persona"} },
-            { "grito",        new[] {"grito","scream","yell","shout","cry","gritar","chillar","terror","horror","miedo","ayuda"} },
-            { "meme",         new[] {"meme","comedy","funny","funny_sound","comedia","humor","gracioso","frase","redes","viral","risas"} },
-            { "frase",        new[] {"frase","voice","speech","voz","habla","humano","meme","grito","dialogo"} },
-            { "comedy",       new[] {"comedy","funny","cartoon","silly","humorous","comedia","gracioso","dibujos","tonto","humor","meme","animado"} },
-            { "kirby",        new[] {"kirby","cartoon","funny","game","nintendo","comedia","meme","dibujos","nintendo_switch","rosa","super_smash"} },
-            { "goku",         new[] {"goku","dragonball","anime","drama","meme","comedy","saiyan","goku_meme","kamehameha"} },
-            { "doraemon",     new[] {"doraemon","anime","cartoon","funny","dibujos","comedia","gato_cosmico","nobita"} },
-            { "cartoon",      new[] {"cartoon","funny","comedy","animated","silly","dibujos","gracioso","comedia","caida","animacion"} },
-            { "yunke",        new[] {"yunke","anvil","yunque","metal","hit","golpe","acero","hierro","yunque_metal"} },
-            { "motosierra",   new[] {"motosierra","chainsaw","wood","madera","cortar","herramienta","corta","ruido"} },
-            { "music",        new[] {"music","musical","melody","tune","song","musica","melodia","cancion","ritmo","loop","banda_sonora"} },
-            { "musica",       new[] {"musica","music","musical","melody","melodia","cancion","ritmo","loop","pista","ambiente"} },
+            { "frase",        new[] {"frase","voice","speech","voz","habla","humano","meme","grito","dialogo","paralizado"} },
+
+            // Nature & Ambience
+            { "viento",       new[] {"viento","wind","breeze","gust","brisa","rafaga","tormenta","storm","aire"} },
+            { "lluvia",       new[] {"lluvia","rain","drizzle","shower","agua","chubasco","tormenta","storm","water"} },
+            { "paso",         new[] {"paso","footstep","step","walk","feet","caminar","pie","steps","andar","correr"} },
+
+            // Weapons
+            { "arma",         new[] {"arma","gun","weapon","shoot","fire","pistola","fusil","disparo","bala","tiro","espada"} },
+            { "espada",       new[] {"espada","sword","blade","slash","slice","clang","hoja","tajo","corte","metal"} },
+
+            // Music
+            { "musica",       new[] {"musica","music","musical","melody","melodia","cancion","ritmo","loop","pista","ambiente","8bit"} }
         };
 
         private static readonly Dictionary<string, string> CategoryMap =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"explosion","Explosión"},{"bomba","Explosión"},{"boom","Explosión"},
-            {"impact","Impacto"},{"impacto","Impacto"},{"hit","Impacto"},{"golpe","Impacto"},{"caida","Impacto"},{"hueso","Impacto"},{"romperse","Impacto"},
+            {"impact","Golpes-Puñetazos"},{"impacto","Golpes-Puñetazos"},{"hit","Golpes-Puñetazos"},{"golpe","Golpes-Puñetazos"},{"puñetazo","Golpes-Puñetazos"},{"caida","Golpes-Puñetazos"},{"hueso","Golpes-Puñetazos"},{"romperse","Golpes-Puñetazos"},
+            {"gallo","Animal"},{"pollo","Animal"},{"perro","Animal"},{"gato","Animal"},{"mono","Animal"},{"vaca","Animal"},{"caballo","Animal"},{"pajaro","Animal"},
             {"nature","Naturaleza"},{"naturaleza","Naturaleza"},{"viento","Naturaleza"},{"lluvia","Naturaleza"},{"trueno","Naturaleza"},{"terremoto","Naturaleza"},
             {"footstep","Pasos"},{"paso","Pasos"},{"caminar","Pasos"},{"correr","Pasos"},
             {"car","Vehículo"},{"coche","Vehículo"},{"engine","Vehículo"},{"motor","Vehículo"},
             {"gun","Arma"},{"arma","Arma"},{"disparo","Arma"},{"espada","Arma"},
-            {"click","Interfaz"},{"clic","Interfaz"},{"boton","Interfaz"},{"error","Interfaz"},{"incorrecto","Interfaz"},{"whoosh","Interfaz"},{"teclado","Interfaz"},{"iphone","Interfaz"},
-            {"voice","Voz"},{"voz","Voz"},{"grito","Voz"},{"frase","Voz"},{"sniff","Voz"},{"esnifar","Voz"},
-            {"comedy","Comedia"},{"comedia","Comedia"},{"cartoon","Comedia"},{"kirby","Comedia"},{"goku","Comedia"},{"doraemon","Comedia"},{"meme","Comedia"},
-            {"yunke","Metal"},{"metal","Metal"},
-            {"madera","Madera"},{"motosierra","Madera"},
-            {"music","Música"},{"musica","Música"},
+            {"click","Interfaz"},{"clic","Interfaz"},{"boton","Interfaz"},{"error","Interfaz"},{"incorrecto","Interfaz"},{"whoosh","Whoosh"},{"teclado","Internet-Ordenadores"},{"iphone","Internet-Ordenadores"},
+            {"voice","Frases"},{"voz","Frases"},{"grito","Frases"},{"frase","Frases"},{"sniff","Frases"},{"esnifar","Frases"},
+            {"comedy","Cartoon-Animados"},{"comedia","Cartoon-Animados"},{"cartoon","Cartoon-Animados"},{"kirby","Cartoon-Animados"},{"goku","Cartoon-Animados"},{"doraemon","Cartoon-Animados"},{"meme","Cartoon-Animados"},{"japon","Cartoon-Animados"},{"anime","Cartoon-Animados"},
+            {"yunke","Objetos"},{"metal","Objetos"},{"madera","Objetos"},{"motosierra","Objetos"},
+            {"music","Música"},{"musica","Música"}
         };
 
         public static string NormalizeText(string text)
@@ -153,8 +183,6 @@ namespace EternAudio
 
             // Include directory hierarchy tokens as tags
             string dirName = Path.GetFileName(Path.GetDirectoryName(filePath));
-            string parentDirName = Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(filePath)));
-
             if (!string.IsNullOrEmpty(dirName))
             {
                 var dirToks = Regex.Split(dirName, @"[\s\-_\.]+");
@@ -186,8 +214,6 @@ namespace EternAudio
             }
 
             string displayName = Path.GetFileNameWithoutExtension(cleanFileName).Replace("_", " ").Trim();
-
-            // Rich tags without arbitrary small cap
             var tagList = new List<string>(tagSet);
 
             long fileSize = 0;
@@ -215,13 +241,15 @@ namespace EternAudio
             var expanded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             expanded.Add(normalized);
 
-            var words = normalized.Split(new char[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var words = normalized.Split(new char[] { ' ', ',', ';', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var word in words)
             {
                 expanded.Add(word);
                 if (SynonymMap.ContainsKey(word))
+                {
                     foreach (var syn in SynonymMap[word])
                         expanded.Add(NormalizeText(syn));
+                }
 
                 foreach (var kvp in SynonymMap)
                 {
